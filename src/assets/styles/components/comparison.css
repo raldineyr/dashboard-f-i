@@ -1,0 +1,1074 @@
+/* =========================================================
+   COMPARATIVO
+   ========================================================= */
+
+.comparison-section {
+  margin-top: var(--spacing-3xl);
+
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+
+  background: var(--bg-card);
+
+  padding: var(--spacing-xl);
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.comparison-header {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  gap: var(--spacing-lg);
+
+  margin-bottom: var(--spacing-md);
+
+  width: 100%;
+  min-width: 0;
+}
+
+.comparison-title-wrapper {
+  min-width: 0;
+
+  flex: 1 1 280px;
+}
+
+.comparison-header h3 {
+  margin: 0;
+
+  font-size: var(--font-size-xl);
+
+  color: var(--color-text-secondary);
+
+  display: flex;
+
+  align-items: center;
+
+  gap: var(--spacing-sm);
+
+  min-width: 0;
+}
+
+.comparison-header h3 i {
+  flex-shrink: 0;
+}
+
+.comparison-subtitle {
+  margin-top: 5px;
+
+  color: var(--color-text-light);
+
+  font-size: var(--font-size-sm);
+
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   CONTROLE DO MODO
+   ========================================================= */
+
+.comparison-mode-control {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+
+  flex: 0 1 230px;
+
+  min-width: 0;
+}
+
+.comparison-mode-control label,
+.comparison-control-group label {
+  color: var(--color-text-muted);
+
+  font-size: 0.68rem;
+
+  font-weight: var(--font-weight-semibold);
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.04em;
+}
+
+.comparison-mode-control select,
+.comparison-control-group select,
+.comparison-controls select {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  border: 1px solid var(--border-input);
+
+  background: var(--bg-white);
+
+  color: var(--color-text-secondary);
+
+  border-radius: var(--radius-sm);
+
+  padding: 8px 10px;
+
+  font-size: 0.75rem;
+
+  font-weight: var(--font-weight-semibold);
+
+  outline: none;
+
+  cursor: pointer;
+
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.comparison-mode-control select:hover,
+.comparison-control-group select:hover,
+.comparison-controls select:hover {
+  border-color: var(--color-primary-light);
+}
+
+.comparison-mode-control select:focus,
+.comparison-control-group select:focus,
+.comparison-controls select:focus {
+  border-color: var(--border-hover);
+
+  box-shadow: var(--shadow-focus);
+}
+
+
+/* =========================================================
+   CONTROLES
+   ========================================================= */
+
+.comparison-controls {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: var(--spacing-md);
+
+  align-items: stretch;
+
+  box-sizing: border-box;
+}
+
+.comparison-control-group {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+
+  flex: 1 1 180px;
+
+  min-width: 0;
+
+  box-sizing: border-box;
+}
+
+.comparison-control-single {
+  flex: 1 1 260px;
+
+  max-width: 420px;
+}
+
+
+/* =========================================================
+   CONTROLES CUSTOMIZADOS
+   ========================================================= */
+
+.comparison-custom-controls {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto
+    minmax(0, 1fr);
+
+  gap: var(--spacing-md);
+
+  align-items: stretch;
+
+  box-sizing: border-box;
+}
+
+.comparison-side {
+  min-width: 0;
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr);
+
+  gap: var(--spacing-sm);
+}
+
+.comparison-side-title {
+  grid-column: 1 / -1;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  color: var(--color-text-secondary);
+
+  font-size: 0.75rem;
+
+  font-weight: var(--font-weight-bold);
+}
+
+.comparison-side-badge {
+  width: 24px;
+  height: 24px;
+
+  flex-shrink: 0;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: var(--bg-table-header);
+
+  border: 1px solid var(--border-color);
+
+  color: var(--color-text-secondary);
+
+  font-size: 0.7rem;
+
+  font-weight: var(--font-weight-bold);
+}
+
+.comparison-vs {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 42px;
+
+  color: var(--color-text-muted);
+
+  font-weight: var(--font-weight-bold);
+
+  font-size: 0.8rem;
+}
+
+
+/* =========================================================
+   RESUMO
+   ========================================================= */
+
+.comparison-custom-summary {
+  margin-top: var(--spacing-md);
+
+  width: 100%;
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  color: var(--color-text-light);
+
+  font-size: 0.72rem;
+
+  line-height: 1.5;
+
+  text-align: center;
+}
+
+.comparison-custom-summary i {
+  margin-right: 5px;
+}
+
+
+/* =========================================================
+   NOTA
+   ========================================================= */
+
+.comparison-note {
+  color: var(--color-text-light);
+
+  font-size: var(--font-size-sm);
+
+  margin-top: var(--spacing-md);
+
+  margin-bottom: var(--spacing-md);
+
+  line-height: 1.5;
+
+  min-width: 0;
+}
+
+.comparison-note i {
+  margin-right: 5px;
+}
+
+
+/* =========================================================
+   RESULTADO CUSTOMIZADO
+   ========================================================= */
+
+.comparison-custom-result {
+  width: 100%;
+
+  min-width: 0;
+
+  box-sizing: border-box;
+}
+
+.comparison-store-cards {
+  width: 100%;
+
+  min-width: 0;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto
+    minmax(0, 1fr);
+
+  gap: var(--spacing-md);
+
+  align-items: center;
+
+  margin-bottom: var(--spacing-lg);
+}
+
+.comparison-store-card {
+  min-width: 0;
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  border: 1px solid var(--border-color);
+
+  border-radius: var(--radius-lg);
+
+  background: var(--bg-lighter);
+
+  padding: 14px;
+
+  overflow: hidden;
+}
+
+.comparison-store-card-label {
+  font-size: 0.65rem;
+
+  font-weight: var(--font-weight-bold);
+
+  color: var(--color-text-muted);
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.05em;
+
+  margin-bottom: 5px;
+}
+
+.comparison-store-card-name {
+  min-width: 0;
+
+  font-size: 0.85rem;
+
+  font-weight: var(--font-weight-bold);
+
+  color: var(--color-text-secondary);
+
+  overflow-wrap: anywhere;
+
+  word-break: break-word;
+}
+
+.comparison-store-card-month {
+  margin-top: 7px;
+
+  color: var(--color-text-light);
+
+  font-size: 0.7rem;
+
+  white-space: nowrap;
+}
+
+.comparison-result-vs {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.75rem;
+
+  font-weight: var(--font-weight-bold);
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   TABELA
+   ========================================================= */
+
+.comparison-table-wrapper {
+  width: 100%;
+
+  max-width: 100%;
+
+  min-width: 0;
+
+  overflow-x: auto;
+
+  overflow-y: hidden;
+
+  box-sizing: border-box;
+
+  border-radius: var(--radius-lg);
+}
+
+.comparison-table {
+  width: 100%;
+
+  min-width: 620px;
+
+  border-collapse: collapse;
+
+  font-size: 0.76rem;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 10px var(--spacing-md);
+
+  border-bottom: 1px solid var(--border-light);
+
+  white-space: nowrap;
+
+  text-align: right;
+
+  vertical-align: middle;
+}
+
+.comparison-table th:first-child,
+.comparison-table td:first-child {
+  text-align: left;
+}
+
+.comparison-table th {
+  background: var(--bg-table-header);
+
+  color: var(--color-text-secondary);
+
+  font-weight: var(--font-weight-bold);
+}
+
+.comparison-table th small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.65rem;
+
+  font-weight: var(--font-weight-normal);
+}
+
+.comparison-table td {
+  color: var(--color-text-secondary);
+}
+
+.comparison-value {
+  white-space: nowrap;
+}
+
+.comparison-difference {
+  white-space: nowrap;
+
+  font-weight: var(--font-weight-semibold);
+}
+
+
+/* =========================================================
+   VALOR + VARIAÇÃO NA MESMA CÉLULA
+   ========================================================= */
+
+.comparison-value-with-variation {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  gap: 6px;
+
+  white-space: nowrap;
+
+  max-width: 100%;
+}
+
+.comparison-main-value {
+  white-space: nowrap;
+
+  color: var(--color-text-secondary);
+
+  font-weight: var(--font-weight-semibold);
+}
+
+.comparison-inline-variation {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  white-space: nowrap;
+
+  font-size: 0.68rem;
+
+  line-height: 1;
+
+  font-weight: var(--font-weight-bold);
+
+  letter-spacing: -0.1px;
+}
+
+
+/* =========================================================
+   VARIAÇÕES
+   ========================================================= */
+
+/*
+   POSITIVA
+   Exemplo:
+   +12,50%
+*/
+
+.variation-positive {
+  color: var(--color-success) !important;
+
+  font-weight: var(--font-weight-bold);
+}
+
+
+/*
+   NEGATIVA
+   Exemplo:
+   -8,30%
+*/
+
+.variation-negative {
+  color: var(--color-danger) !important;
+
+  font-weight: var(--font-weight-bold);
+}
+
+
+/*
+   NEUTRA
+   Exemplo:
+   0,00%
+*/
+
+.variation-neutral {
+  color: var(--color-text-light) !important;
+
+  font-weight: var(--font-weight-semibold);
+}
+
+
+/* =========================================================
+   VARIAÇÃO EMBUTIDA NO VALOR
+   ========================================================= */
+
+/*
+   Verde quando positiva
+*/
+
+.comparison-inline-variation.variation-positive {
+  color: var(--color-success) !important;
+
+  font-weight: var(--font-weight-bold);
+}
+
+
+/*
+   Vermelho quando negativa
+*/
+
+.comparison-inline-variation.variation-negative {
+  color: var(--color-danger) !important;
+
+  font-weight: var(--font-weight-bold);
+}
+
+
+/*
+   Cinza quando neutra
+*/
+
+.comparison-inline-variation.variation-neutral {
+  color: var(--color-text-light) !important;
+
+  font-weight: var(--font-weight-semibold);
+}
+
+
+/* =========================================================
+   SETAS OPCIONAIS
+   ========================================================= */
+
+.comparison-inline-variation i {
+  margin-right: 2px;
+
+  font-size: 0.58rem;
+}
+
+
+/* =========================================================
+   VARIAÇÃO NA COLUNA DO INDICADOR
+   ========================================================= */
+
+.comparison-difference-header {
+  text-align: right;
+
+  white-space: nowrap;
+}
+
+.comparison-difference.variation-positive {
+  color: var(--color-success) !important;
+}
+
+.comparison-difference.variation-negative {
+  color: var(--color-danger) !important;
+}
+
+.comparison-difference.variation-neutral {
+  color: var(--color-text-light) !important;
+}
+
+
+/* =========================================================
+   ESTADO VAZIO
+   ========================================================= */
+
+.comparison-empty {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  text-align: center;
+
+  padding:
+    var(--spacing-3xl)
+    var(--spacing-md);
+
+  color: var(--color-text-light);
+
+  font-size: 0.8rem;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 6px;
+}
+
+.comparison-empty i {
+  font-size: 1.2rem;
+
+  margin-bottom: 4px;
+}
+
+.comparison-empty strong {
+  color: var(--color-text-secondary);
+
+  font-weight: var(--font-weight-semibold);
+}
+
+
+/* =========================================================
+   VENDEDORES
+   ========================================================= */
+
+.seller-comparison-controls {
+  width: 100%;
+
+  min-width: 0;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    auto
+    minmax(0, 1fr)
+    minmax(0, 1fr);
+
+  gap: var(--spacing-md);
+
+  align-items: end;
+
+  box-sizing: border-box;
+
+  margin-bottom: var(--spacing-lg);
+}
+
+.comparison-field {
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+.comparison-field label {
+  color: var(--color-text-muted);
+
+  font-size: 0.68rem;
+
+  font-weight: var(--font-weight-semibold);
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.04em;
+}
+
+.comparison-select {
+  width: 100%;
+
+  min-width: 0;
+
+  max-width: 100%;
+
+  box-sizing: border-box;
+
+  border: 1px solid var(--border-input);
+
+  background: var(--bg-white);
+
+  color: var(--color-text-secondary);
+
+  border-radius: var(--radius-sm);
+
+  padding: 8px 10px;
+
+  font-size: 0.75rem;
+
+  font-weight: var(--font-weight-semibold);
+
+  outline: none;
+
+  cursor: pointer;
+
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.comparison-select:hover {
+  border-color: var(--color-primary-light);
+}
+
+.comparison-select:focus {
+  border-color: var(--border-hover);
+
+  box-shadow: var(--shadow-focus);
+}
+
+.comparison-versus {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-width: 32px;
+
+  height: 36px;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.8rem;
+
+  font-weight: var(--font-weight-bold);
+}
+
+
+/* =========================================================
+   VARIAÇÃO DO VENDEDOR
+   ========================================================= */
+
+.comparison-seller-value {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  gap: 6px;
+
+  white-space: nowrap;
+}
+
+.comparison-seller-value-number {
+  white-space: nowrap;
+
+  color: var(--color-text-secondary);
+
+  font-weight: var(--font-weight-semibold);
+}
+
+.comparison-seller-value-variation {
+  white-space: nowrap;
+
+  font-size: 0.68rem;
+
+  font-weight: var(--font-weight-bold);
+}
+
+.comparison-seller-value-variation.variation-positive {
+  color: var(--color-success) !important;
+}
+
+.comparison-seller-value-variation.variation-negative {
+  color: var(--color-danger) !important;
+}
+
+.comparison-seller-value-variation.variation-neutral {
+  color: var(--color-text-light) !important;
+}
+
+
+/* =========================================================
+   RESPONSIVIDADE — TABLETS
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .comparison-section {
+    padding: var(--spacing-lg);
+  }
+
+
+  .comparison-header {
+    flex-direction: column;
+  }
+
+
+  .comparison-mode-control {
+    width: 100%;
+
+    flex: 1 1 auto;
+  }
+
+
+  .comparison-custom-controls {
+    grid-template-columns: 1fr;
+  }
+
+
+  .comparison-vs {
+    min-height: 30px;
+  }
+
+
+  .comparison-side {
+    grid-template-columns: 1fr;
+  }
+
+
+  .comparison-side-title {
+    grid-column: 1;
+  }
+
+
+  .comparison-store-cards {
+    grid-template-columns: 1fr;
+  }
+
+
+  .comparison-result-vs {
+    min-height: 30px;
+  }
+
+
+  .seller-comparison-controls {
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(0, 1fr);
+  }
+
+
+  .comparison-versus {
+    grid-column: 1 / -1;
+
+    min-height: 25px;
+  }
+}
+
+
+/* =========================================================
+   RESPONSIVIDADE — CELULARES
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .comparison-section {
+    padding: var(--spacing-md);
+
+    border-radius: var(--radius-lg);
+  }
+
+
+  .comparison-header h3 {
+    font-size: 1rem;
+  }
+
+
+  .comparison-subtitle {
+    font-size: 0.68rem;
+  }
+
+
+  .comparison-custom-controls {
+    gap: var(--spacing-sm);
+  }
+
+
+  .comparison-side {
+    grid-template-columns: 1fr;
+  }
+
+
+  .comparison-control-group {
+    width: 100%;
+
+    min-width: 0;
+  }
+
+
+  .comparison-control-group select,
+  .comparison-mode-control select,
+  .comparison-controls select {
+    width: 100%;
+
+    max-width: 100%;
+
+    min-width: 0;
+  }
+
+
+  .comparison-custom-summary {
+    text-align: left;
+  }
+
+
+  .comparison-table {
+    min-width: 580px;
+  }
+
+
+  .comparison-value-with-variation {
+    gap: 4px;
+  }
+
+
+  .comparison-inline-variation {
+    font-size: 0.64rem;
+  }
+
+
+  .seller-comparison-controls {
+    grid-template-columns: 1fr;
+
+    gap: var(--spacing-sm);
+  }
+
+
+  .comparison-versus {
+    grid-column: 1;
+
+    min-height: 28px;
+  }
+}
+
+
+/* =========================================================
+   CELULARES MUITO PEQUENOS
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .comparison-section {
+    padding: 12px;
+  }
+
+
+  .comparison-store-card {
+    padding: 11px;
+  }
+
+
+  .comparison-table {
+    min-width: 540px;
+
+    font-size: 0.7rem;
+  }
+
+
+  .comparison-table th,
+  .comparison-table td {
+    padding: 8px 9px;
+  }
+
+
+  .comparison-inline-variation {
+    font-size: 0.6rem;
+  }
+
+
+  .comparison-value-with-variation {
+    gap: 3px;
+  }
+}

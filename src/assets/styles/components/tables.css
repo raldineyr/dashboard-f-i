@@ -1,0 +1,389 @@
+/* =========================================================
+   TABELA DE VENDEDORES
+   ========================================================= */
+
+.table-section {
+  margin-top: var(--spacing-2xl);
+
+  border-radius: var(--radius-lg);
+
+  border: 1px solid var(--border-color);
+
+  background: var(--bg-card);
+
+  /*
+   * IMPORTANTE:
+   * A tabela não terá mais uma área vertical independente.
+   * Ela crescerá até o último vendedor.
+   */
+  max-height: none;
+
+  height: auto;
+
+  /*
+   * Mantém somente o scroll horizontal caso
+   * as 16 colunas não caibam na tela.
+   */
+  overflow-x: auto;
+
+  overflow-y: visible;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================================
+   TABELA
+   ========================================================= */
+
+table {
+  width: 100%;
+
+  min-width: 1100px;
+
+  border-collapse: collapse;
+
+  font-size: var(--font-size-base);
+
+  height: auto;
+}
+
+
+/* =========================================================
+   CABEÇALHO
+   ========================================================= */
+
+/*
+ * Mantemos o cabeçalho fixo enquanto a página rola.
+ *
+ * Se você preferir que o cabeçalho também role normalmente
+ * durante a impressão, pode trocar sticky por static.
+ */
+thead {
+  position: sticky;
+
+  top: 0;
+
+  z-index: 10;
+}
+
+
+/* =========================================================
+   CABEÇALHO DAS COLUNAS
+   ========================================================= */
+
+th {
+  background: var(--bg-table-header);
+
+  color: var(--color-text-secondary);
+
+  font-weight: var(--font-weight-semibold);
+
+  padding: var(--spacing-md) 14px;
+
+  text-align: left;
+
+  white-space: nowrap;
+
+  border-bottom: 1px solid var(--border-medium);
+
+  font-size: var(--font-size-md);
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.3px;
+}
+
+
+/* =========================================================
+   CÉLULAS
+   ========================================================= */
+
+td {
+  padding: 10px 14px;
+
+  border-bottom: 1px solid var(--border-light);
+
+  color: var(--color-text-tertiary);
+
+  transition: background var(--transition-fast);
+}
+
+
+/* =========================================================
+   HOVER DAS LINHAS
+   ========================================================= */
+
+tbody tr:hover td {
+  background: var(--bg-light);
+}
+
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* =========================================================
+   CÉLULAS R
+   ========================================================= */
+
+.r-cell {
+  font-weight: var(--font-weight-extrabold);
+
+  text-align: center !important;
+
+  min-width: 42px;
+
+  border-left: 1px solid rgba(255, 255, 255, 0.55);
+
+  border-right: 1px solid rgba(255, 255, 255, 0.55);
+
+  transition: transform var(--transition-fast);
+}
+
+
+.r-cell:hover {
+  transform: scale(1.05);
+}
+
+
+/* =========================================================
+   CORES DAS CÉLULAS R
+   ========================================================= */
+
+.r-cell.r0 {
+  background: var(--color-error);
+
+  color: var(--bg-white);
+}
+
+
+.r-cell.r1 {
+  background: var(--color-warning-bg);
+
+  color: #111;
+}
+
+
+.r-cell.r2 {
+  background: var(--color-warning-bg);
+
+  color: #111;
+}
+
+
+.r-cell.r3 {
+  background: var(--color-warning);
+
+  color: var(--bg-white);
+}
+
+
+.r-cell.r4 {
+  background: var(--color-success-bg);
+
+  color: var(--bg-white);
+}
+
+
+.r-cell.r5 {
+  background: var(--color-success-bg);
+
+  color: var(--bg-white);
+}
+
+
+.r-cell.r150,
+.r-cell.r100,
+.r-cell.r75,
+.r-cell.r50 {
+  background: var(--color-info);
+
+  color: var(--bg-white);
+}
+
+
+/* =========================================================
+   CÉLULAS SPF
+   ========================================================= */
+
+.spf-cell {
+  font-weight: var(--font-weight-extrabold);
+
+  text-align: center !important;
+
+  border-left: 1px solid rgba(255, 255, 255, 0.55);
+
+  border-right: 1px solid rgba(255, 255, 255, 0.55);
+
+  transition: transform var(--transition-fast);
+}
+
+
+.spf-cell:hover {
+  transform: scale(1.05);
+}
+
+
+.spf-zero {
+  background: var(--color-error);
+
+  color: var(--bg-white);
+}
+
+
+.spf-positive {
+  background: var(--color-success-bg);
+
+  color: var(--bg-white);
+}
+
+
+/* =========================================================
+   ORDENAÇÃO DE VENDEDORES
+   ========================================================= */
+
+.seller-sort-control {
+  display: flex;
+
+  align-items: center;
+
+  gap: var(--spacing-sm);
+
+  margin: 0 0 var(--spacing-md);
+
+  padding: 10px var(--spacing-md);
+
+  border: 1px solid var(--border-color);
+
+  border-radius: var(--radius-md);
+
+  background: var(--bg-card);
+}
+
+
+.seller-sort-control label {
+  color: var(--color-text-muted);
+
+  font-size: var(--font-size-md);
+
+  font-weight: var(--font-weight-bold);
+
+  white-space: nowrap;
+}
+
+
+.seller-sort-control select {
+  border: 1px solid var(--border-dark);
+
+  background: var(--bg-white);
+
+  color: var(--color-text-secondary);
+
+  border-radius: var(--radius-sm);
+
+  padding: 6px 9px;
+
+  font-size: var(--font-size-md);
+
+  font-weight: var(--font-weight-semibold);
+
+  outline: none;
+
+  cursor: pointer;
+
+  transition: border-color var(--transition-fast);
+}
+
+
+.seller-sort-control select:hover {
+  border-color: var(--color-primary-light);
+}
+
+
+.seller-sort-control select:focus {
+  border-color: var(--border-hover);
+
+  box-shadow: var(--shadow-focus);
+}
+
+
+/* =========================================================
+   RESPONSIVIDADE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .table-section {
+    overflow-x: auto;
+
+    overflow-y: visible;
+
+    max-height: none;
+
+    height: auto;
+  }
+
+  table {
+    min-width: 1100px;
+  }
+}
+
+
+@media (max-width: 600px) {
+
+  .table-section {
+    overflow-x: auto;
+
+    overflow-y: visible;
+
+    max-height: none;
+
+    height: auto;
+  }
+
+  table {
+    min-width: 1000px;
+  }
+}
+
+
+/* =========================================================
+   IMPRESSÃO / PRINT
+   ========================================================= */
+
+/*
+ * Quando você imprimir ou gerar PDF,
+ * removemos completamente qualquer comportamento
+ * de scroll da tabela.
+ */
+
+@media print {
+
+  .table-section {
+    max-height: none !important;
+
+    height: auto !important;
+
+    overflow: visible !important;
+
+    overflow-x: visible !important;
+
+    overflow-y: visible !important;
+
+    border: 1px solid var(--border-color);
+  }
+
+  table {
+    width: 100%;
+
+    min-width: 0;
+
+    height: auto;
+  }
+
+  thead {
+    position: static;
+  }
+}

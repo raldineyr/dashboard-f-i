@@ -1,0 +1,15 @@
+/* Base */
+@import './base/reset.css';
+@import './base/variables.css';
+@import './base/utilities.css';
+
+/* Componentes */
+@import './components/header.css';
+@import './components/kpi-cards.css';
+@import './components/charts.css';
+@import './components/tables.css';
+@import './components/seller-filter.css';
+@import './components/file-tags.css';
+@import './components/comparison.css';
+@import './components/buttons.css';
+@import './components/footer.css';
