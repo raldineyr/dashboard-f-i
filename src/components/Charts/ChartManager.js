@@ -1,8 +1,26 @@
 import Chart from 'chart.js/auto';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
 import {
   CHART_TYPES,
   CHART_COLORS
 } from '../../config/chart.config.js';
+
+
+// ================================================================
+// REGISTRA SOMENTE O PLUGIN
+// ================================================================
+//
+// NÃO ALTERAR:
+// Chart.defaults.plugins.datalabels
+// Chart.defaults.plugins.legend
+//
+// Todas as configurações são feitas individualmente em cada gráfico.
+//
+// ================================================================
+
+Chart.register(ChartDataLabels);
+
 
 export class ChartManager {
 
@@ -15,19 +33,42 @@ export class ChartManager {
     this.activeSellers = new Set();
 
     this.lastData = null;
+
     this.chartsReady = false;
+
     this.pendingUpdate = false;
 
 
-    // =========================================================
-    // TIPOS PADRÃO DOS GRÁFICOS
-    // =========================================================
+    // ============================================================
+    // CONTROLE INDIVIDUAL DOS VALORES
+    // ============================================================
+
+    this.showDataLabels = {
+
+      vendedor: true,
+
+      retornoSpf: true,
+
+      banco: true,
+
+      rType: true,
+
+      spfGeral: true,
+
+      spfVendedor: false
+
+    };
+
+
+    // ============================================================
+    // TIPOS PADRÃO
+    // ============================================================
 
     this.chartTypes = {
 
       vendedor: 'bar',
 
-      retornoSpf: 'bar',
+      retornoSpf: 'doughnut',
 
       banco: 'bar',
 
@@ -40,9 +81,9 @@ export class ChartManager {
     };
 
 
-    // =========================================================
-    // PALETA PARA GRÁFICOS DE PIZZA / ROSCA
-    // =========================================================
+    // ============================================================
+    // PALETA
+    // ============================================================
 
     this.pieColors = [
 
@@ -66,236 +107,568 @@ export class ChartManager {
     ];
 
 
-    // =========================================================
-    // CORES PARA SPF
-    // =========================================================
+    // ============================================================
+    // CORES SPF
+    // ============================================================
 
     this.spfColors = {
+
       comSpf: '#16A34A',
+
       semSpf: '#DC2626'
+
     };
 
 
-    // =========================================================
-    // ESCUTA FILTRO DE VENDEDORES
-    // =========================================================
+    // ============================================================
+    // EVENTO DE FILTRO DE VENDEDORES
+    // ============================================================
 
     if (this.eventBus) {
+
       this.eventBus.on(
         'seller:filterChanged',
         (activeSellers) => {
 
           this.activeSellers =
-            activeSellers || new Set();
+            activeSellers instanceof Set
+              ? new Set(activeSellers)
+              : new Set(
+                  Array.isArray(activeSellers)
+                    ? activeSellers
+                    : []
+                );
+
 
           if (this.lastData) {
-            this.update(this.lastData);
+
+            this.update(
+              this.lastData
+            );
+
           }
 
         }
       );
 
-      // O ChartManager também escuta diretamente a chegada dos dados.
-      // Isso garante que o gráfico RETORNO SPF VS SPF A PAGAR seja
-      // atualizado mesmo quando o CSV chega no mesmo ciclo em que os
-      // componentes do dashboard estão sendo renderizados.
-      this.eventBus.on('data:updated', (data) => {
-        this.lastData = Array.isArray(data) ? data : [];
-
-        if (this.chartsReady && this.charts.size > 0) {
-          this.update(this.lastData);
-        } else {
-          this.pendingUpdate = true;
-        }
-      });
     }
 
   }
 
 
-  // =========================================================
-  // GARANTE QUE O TIPO PIZZA EXISTE
-  // =========================================================
+  // ==============================================================
+  // TIPOS DISPONÍVEIS
+  // ==============================================================
 
   getChartTypes(key) {
 
     let types = [];
 
+
     switch (key) {
 
       case 'vendedor':
-        types = CHART_TYPES?.VENDEDOR || [
-          { value: 'bar', label: 'Barras' },
-          { value: 'line', label: 'Linhas' },
-          { value: 'radar', label: 'Radar' },
-          { value: 'pie', label: 'Pizza' },
-          { value: 'doughnut', label: 'Rosca' },
-          { value: 'polarArea', label: 'Área polar' }
-        ];
+
+        types =
+          CHART_TYPES?.VENDEDOR || [
+
+            {
+              value: 'bar',
+              label: 'Barras'
+            },
+
+            {
+              value: 'line',
+              label: 'Linhas'
+            },
+
+            {
+              value: 'radar',
+              label: 'Radar'
+            },
+
+            {
+              value: 'pie',
+              label: 'Pizza'
+            },
+
+            {
+              value: 'doughnut',
+              label: 'Rosca'
+            },
+
+            {
+              value: 'polarArea',
+              label: 'Área polar'
+            }
+
+          ];
+
         break;
+
 
       case 'retornoSpf':
-        types = CHART_TYPES?.RETORNO_SPF || [
-          { value: 'doughnut', label: 'Rosca' },
-          { value: 'pie', label: 'Pizza' },
-          { value: 'bar', label: 'Barras' },
-          { value: 'polarArea', label: 'Área polar' }
-        ];
+
+        types =
+          CHART_TYPES?.RETORNO_SPF || [
+
+            {
+              value: 'doughnut',
+              label: 'Rosca'
+            },
+
+            {
+              value: 'pie',
+              label: 'Pizza'
+            },
+
+            {
+              value: 'bar',
+              label: 'Barras'
+            },
+
+            {
+              value: 'polarArea',
+              label: 'Área polar'
+            }
+
+          ];
+
         break;
+
 
       case 'banco':
-        types = CHART_TYPES?.BANCO || [
-          { value: 'bar', label: 'Barras' },
-          { value: 'line', label: 'Linhas' },
-          { value: 'radar', label: 'Radar' },
-          { value: 'pie', label: 'Pizza' },
-          { value: 'doughnut', label: 'Rosca' },
-          { value: 'polarArea', label: 'Área polar' }
-        ];
+
+        types =
+          CHART_TYPES?.BANCO || [
+
+            {
+              value: 'bar',
+              label: 'Barras'
+            },
+
+            {
+              value: 'line',
+              label: 'Linhas'
+            },
+
+            {
+              value: 'radar',
+              label: 'Radar'
+            },
+
+            {
+              value: 'pie',
+              label: 'Pizza'
+            },
+
+            {
+              value: 'doughnut',
+              label: 'Rosca'
+            },
+
+            {
+              value: 'polarArea',
+              label: 'Área polar'
+            }
+
+          ];
+
         break;
+
 
       case 'rType':
-        types = CHART_TYPES?.R_TYPE || [
-          { value: 'bar', label: 'Barras' },
-          { value: 'line', label: 'Linhas' },
-          { value: 'radar', label: 'Radar' },
-          { value: 'pie', label: 'Pizza' },
-          { value: 'doughnut', label: 'Rosca' },
-          { value: 'polarArea', label: 'Área polar' }
-        ];
+
+        types =
+          CHART_TYPES?.R_TYPE || [
+
+            {
+              value: 'bar',
+              label: 'Barras'
+            },
+
+            {
+              value: 'line',
+              label: 'Linhas'
+            },
+
+            {
+              value: 'radar',
+              label: 'Radar'
+            },
+
+            {
+              value: 'pie',
+              label: 'Pizza'
+            },
+
+            {
+              value: 'doughnut',
+              label: 'Rosca'
+            },
+
+            {
+              value: 'polarArea',
+              label: 'Área polar'
+            }
+
+          ];
+
         break;
+
 
       case 'spfGeral':
-        types = CHART_TYPES?.SPF_GERAL || [
-          { value: 'doughnut', label: 'Rosca' },
-          { value: 'pie', label: 'Pizza' },
-          { value: 'bar', label: 'Barras' },
-          { value: 'polarArea', label: 'Área polar' }
-        ];
+
+        types =
+          CHART_TYPES?.SPF_GERAL || [
+
+            {
+              value: 'doughnut',
+              label: 'Rosca'
+            },
+
+            {
+              value: 'pie',
+              label: 'Pizza'
+            },
+
+            {
+              value: 'bar',
+              label: 'Barras'
+            },
+
+            {
+              value: 'polarArea',
+              label: 'Área polar'
+            }
+
+          ];
+
         break;
+
 
       case 'spfVendedor':
-        types = CHART_TYPES?.SPF_VENDEDOR || [
-          { value: 'bar', label: 'Barras' },
-          { value: 'line', label: 'Linhas' },
-          { value: 'radar', label: 'Radar' },
-          { value: 'pie', label: 'Pizza' },
-          { value: 'doughnut', label: 'Rosca' },
-          { value: 'polarArea', label: 'Área polar' }
-        ];
+
+        types =
+          CHART_TYPES?.SPF_VENDEDOR || [
+
+            {
+              value: 'bar',
+              label: 'Barras'
+            },
+
+            {
+              value: 'line',
+              label: 'Linhas'
+            },
+
+            {
+              value: 'radar',
+              label: 'Radar'
+            },
+
+            {
+              value: 'pie',
+              label: 'Pizza'
+            },
+
+            {
+              value: 'doughnut',
+              label: 'Rosca'
+            },
+
+            {
+              value: 'polarArea',
+              label: 'Área polar'
+            }
+
+          ];
+
         break;
 
+
       default:
+
         types = [];
 
     }
 
 
     if (!Array.isArray(types)) {
+
       types = [];
+
     }
 
-    types = [...types];
 
-    const hasPie = types.some(type => type && type.value === 'pie');
-    if (!hasPie) {
-      types.push({ value: 'pie', label: 'Pizza' });
+    types =
+      types
+        .filter(
+          type =>
+            type &&
+            typeof type.value === 'string' &&
+            typeof type.label === 'string'
+        )
+        .map(
+          type => ({
+            value: type.value,
+            label: type.label
+          })
+        );
+
+
+    if (
+      !types.some(
+        type =>
+          type.value === 'pie'
+      )
+    ) {
+
+      types.push({
+
+        value: 'pie',
+
+        label: 'Pizza'
+
+      });
+
     }
 
-    const hasDoughnut = types.some(type => type && type.value === 'doughnut');
-    if (!hasDoughnut) {
-      types.push({ value: 'doughnut', label: 'Rosca' });
+
+    if (
+      !types.some(
+        type =>
+          type.value === 'doughnut'
+      )
+    ) {
+
+      types.push({
+
+        value: 'doughnut',
+
+        label: 'Rosca'
+
+      });
+
     }
+
 
     return types;
 
   }
 
 
-  // =========================================================
+  // ==============================================================
   // RENDER
-  // =========================================================
+  // ==============================================================
 
   render(container) {
 
     if (!container) {
-      console.error('ChartManager: container não encontrado.');
+
+      console.error(
+        'ChartManager: container não encontrado.'
+      );
+
       return;
+
     }
+
+
+    this.destroyCharts();
+
 
     container.innerHTML = `
 
       <div class="chart-grid">
 
-        ${this.createChartCard('vendedor', 'RENTABILIDADE POR VENDEDOR', 'fa-users')}
-        ${this.createChartCard('retornoSpf', 'RETORNO SPF VS SPF A PAGAR', 'fa-chart-pie')}
-        ${this.createChartCard('banco', 'FINANCIAMENTOS POR BANCO', 'fa-university')}
-        ${this.createChartCard('rType', 'COMISSÃO TIPO R', 'fa-tags')}
-        ${this.createChartCard('spfGeral', 'COM SPF VS SEM SPF', 'fa-check-circle')}
-        ${this.createChartCard('spfVendedor', 'SPF POR VENDEDOR', 'fa-user-check')}
+        ${this.createChartCard(
+          'vendedor',
+          'RENTABILIDADE POR VENDEDOR',
+          'fa-users'
+        )}
+
+        ${this.createChartCard(
+          'retornoSpf',
+          'RETORNO SPF VS SPF A PAGAR',
+          'fa-chart-pie'
+        )}
+
+        ${this.createChartCard(
+          'banco',
+          'FINANCIAMENTOS POR BANCO',
+          'fa-university'
+        )}
+
+        ${this.createChartCard(
+          'rType',
+          'COMISSÃO TIPO R',
+          'fa-tags'
+        )}
+
+        ${this.createChartCard(
+          'spfGeral',
+          'COM SPF VS SEM SPF',
+          'fa-check-circle'
+        )}
+
+        ${this.createChartCard(
+          'spfVendedor',
+          'SPF POR VENDEDOR',
+          'fa-user-check'
+        )}
 
       </div>
 
+
       <div class="chart-note">
-        Use "Visualização" para alternar entre barras, linhas, radar, rosca/pizza e área polar.
+
+        Use "Visualização" para alternar entre barras,
+        linhas, radar, rosca/pizza e área polar.
+
       </div>
 
     `;
 
+
     this.initializeCharts();
-    this.chartsReady = true;
-
-    // Garante especificamente a existência do gráfico RETORNO SPF VS SPF A PAGAR
-    // antes de processar qualquer atualização pendente.
-    this.ensureRetornoSpfChart();
-
-    // O CSV pode ser carregado muito próximo do momento em que os canvases
-    // entram no DOM. Fazemos algumas tentativas curtas de atualização para
-    // garantir que o primeiro desenho aconteça sem exigir troca manual no
-    // seletor de visualização.
-    this.scheduleInitialUpdate();
 
   }
 
 
-  // =========================================================
-  // CARD DO GRÁFICO
-  // =========================================================
+  // ==============================================================
+  // CRIA CARD
+  // ==============================================================
 
-  createChartCard(key, title, icon) {
+  createChartCard(
+    key,
+    title,
+    icon
+  ) {
 
-    const types = this.getChartTypes(key);
+    const types =
+      this.getChartTypes(
+        key
+      );
 
-    // Garante que o tipo atual existe na lista
-    const currentType = this.chartTypes[key];
-    const hasCurrentType = types.some(t => t.value === currentType);
 
-    if (!hasCurrentType && types.length > 0) {
-      this.chartTypes[key] = types[0].value;
+    const currentType =
+      this.chartTypes[key];
+
+
+    const hasCurrentType =
+      types.some(
+        type =>
+          type.value === currentType
+      );
+
+
+    if (
+      !hasCurrentType &&
+      types.length > 0
+    ) {
+
+      this.chartTypes[key] =
+        types[0].value;
+
     }
+
+
+    const valuesEnabled =
+      this.showDataLabels[key] === true;
+
 
     return `
 
-      <div class="chart-card">
+      <div
+        class="chart-card"
+        data-chart-key="${key}"
+      >
 
         <h3>
+
           <i class="fas ${icon}"></i>
+
           ${title}
+
         </h3>
 
+
         <div class="chart-toolbar">
-          <span class="chart-type-label">Visualização</span>
-          <select class="chart-type-select" id="chartType_${key}">
-            ${types.map(type => `
-              <option value="${type.value}" ${type.value === this.chartTypes[key] ? 'selected' : ''}>
-                ${type.label}
-              </option>
-            `).join('')}
+
+          <span class="chart-type-label">
+            Visualização
+          </span>
+
+
+          <select
+            class="chart-type-select"
+            id="chartType_${key}"
+            aria-label="Selecionar visualização do gráfico"
+          >
+
+            ${types.map(
+              type => `
+
+                <option
+                  value="${type.value}"
+                  ${
+                    type.value ===
+                    this.chartTypes[key]
+                      ? 'selected'
+                      : ''
+                  }
+                >
+
+                  ${type.label}
+
+                </option>
+
+              `
+            ).join('')}
+
           </select>
+
+
+          <select
+            class="chart-type-select chart-values-select"
+            id="chartValues_${key}"
+            aria-label="Ativar ou desativar valores do gráfico"
+          >
+
+            <option
+              value="on"
+              ${
+                valuesEnabled
+                  ? 'selected'
+                  : ''
+              }
+            >
+              Valores: Ativados
+            </option>
+
+            <option
+              value="off"
+              ${
+                !valuesEnabled
+                  ? 'selected'
+                  : ''
+              }
+            >
+              Valores: Desativados
+            </option>
+
+          </select>
+
         </div>
 
+
         <div class="chart-container">
-          <canvas id="chart_${key}"></canvas>
+
+          <canvas
+            id="chart_${key}"
+          ></canvas>
+
         </div>
 
       </div>
@@ -305,772 +678,2919 @@ export class ChartManager {
   }
 
 
-  // =========================================================
-  // INICIALIZA OS GRÁFICOS
-  // =========================================================
+  // ==============================================================
+  // INICIALIZA GRÁFICOS
+  // ==============================================================
 
   initializeCharts() {
 
-    const chartKeys = ['vendedor', 'retornoSpf', 'banco', 'rType', 'spfGeral', 'spfVendedor'];
+    const chartKeys = [
 
-    chartKeys.forEach(key => {
+      'vendedor',
 
-      const canvas = document.getElementById(`chart_${key}`);
+      'retornoSpf',
 
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
-        const chart = new Chart(ctx, this.getDefaultConfig(key));
-        this.charts.set(key, chart);
+      'banco',
+
+      'rType',
+
+      'spfGeral',
+
+      'spfVendedor'
+
+    ];
+
+
+    chartKeys.forEach(
+      key => {
+
+        const canvas =
+          document.getElementById(
+            `chart_${key}`
+          );
+
+
+        if (canvas) {
+
+          const ctx =
+            canvas.getContext(
+              '2d'
+            );
+
+
+          const config =
+            this.getDefaultConfig(
+              key
+            );
+
+
+          try {
+
+            const chart =
+              new Chart(
+                ctx,
+                config
+              );
+
+
+            this.charts.set(
+              key,
+              chart
+            );
+
+          } catch (error) {
+
+            console.error(
+              `ChartManager: erro ao criar gráfico ${key}:`,
+              error
+            );
+
+          }
+
+        }
+
+
+        const typeSelect =
+          document.getElementById(
+            `chartType_${key}`
+          );
+
+
+        if (typeSelect) {
+
+          typeSelect.addEventListener(
+            'change',
+            event => {
+
+              this.changeChartType(
+                key,
+                event.target.value
+              );
+
+            }
+          );
+
+        }
+
+
+        const valuesSelect =
+          document.getElementById(
+            `chartValues_${key}`
+          );
+
+
+        if (valuesSelect) {
+
+          valuesSelect.addEventListener(
+            'change',
+            event => {
+
+              this.setChartDataLabelsVisibility(
+                key,
+                event.target.value === 'on'
+              );
+
+            }
+          );
+
+        }
+
       }
+    );
 
-      const select = document.getElementById(`chartType_${key}`);
 
-      if (select) {
-        select.addEventListener('change', event => {
-          this.changeChartType(key, event.target.value);
-        });
-      }
+    this.chartsReady = true;
 
-    });
 
-    // Força o Chart.js a calcular o tamanho dos canvases após o DOM
-    // estar efetivamente renderizado. Isso evita gráficos vazios no
-    // primeiro carregamento do CSV.
-    requestAnimationFrame(() => {
-      this.charts.forEach(chart => chart.resize());
-      this.scheduleInitialUpdate();
-    });
+    if (
+      this.pendingUpdate &&
+      this.lastData
+    ) {
 
-  }
+      this.pendingUpdate = false;
 
-  // Garante o primeiro desenho dos gráficos depois que o DOM, o CSS e os
-  // dados do CSV estiverem disponíveis. O update é idempotente, então as
-  // tentativas extras não alteram os dados nem o tipo escolhido.
-  scheduleInitialUpdate() {
-    const run = () => {
-      if (!this.chartsReady || this.charts.size === 0) return;
+      this.update(
+        this.lastData
+      );
 
-      this.ensureRetornoSpfChart();
-
-      if (this.lastData?.length) {
-        this.update(this.lastData);
-      }
-    };
-
-    requestAnimationFrame(run);
-    requestAnimationFrame(() => requestAnimationFrame(run));
-    setTimeout(run, 80);
-    setTimeout(run, 250);
-  }
-
-  ensureRetornoSpfChart() {
-    const canvas = document.getElementById('chart_retornoSpf');
-    if (!canvas) return null;
-
-    let chart = this.charts.get('retornoSpf');
-
-    // Se o DOM recriou o canvas, o Chart antigo não pode ser reutilizado.
-    if (chart && chart.canvas !== canvas) {
-      try { chart.destroy(); } catch (_) {}
-      this.charts.delete('retornoSpf');
-      chart = null;
     }
+
+  }
+
+
+  // ==============================================================
+  // ATIVA / DESATIVA VALORES DE UM GRÁFICO
+  // ==============================================================
+
+  setChartDataLabelsVisibility(
+    key,
+    visible
+  ) {
+
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        this.showDataLabels,
+        key
+      )
+    ) {
+
+      return;
+
+    }
+
+
+    this.showDataLabels[key] =
+      Boolean(
+        visible
+      );
+
+
+    const chart =
+      this.charts.get(
+        key
+      );
+
 
     if (!chart) {
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return null;
 
-      chart = new Chart(ctx, this.getDefaultConfig('retornoSpf'));
-      this.charts.set('retornoSpf', chart);
+      return;
+
     }
 
-    try {
-      chart.resize();
-    } catch (_) {}
 
-    return chart;
+    if (!chart.options.plugins) {
+
+      chart.options.plugins = {};
+
+    }
+
+
+    chart.options.plugins.datalabels =
+      this.getDataLabelOptions(
+        key,
+        chart.config.type
+      );
+
+
+    chart.update(
+      'none'
+    );
+
   }
 
 
-  // =========================================================
+  // ==============================================================
+  // DEFINE SE DEVE MOSTRAR
+  // ==============================================================
+
+  shouldShowDataLabels(
+    key
+  ) {
+
+    // CORREÇÃO:
+    // O SPF POR VENDEDOR também deve respeitar o estado
+    // definido pelo seletor "Valores: Ativados/Desativados".
+    //
+    // Antes havia uma condição que bloqueava explicitamente
+    // o spfVendedor, fazendo com que os valores nunca fossem
+    // exibidos, mesmo quando o botão estava ativado.
+
+    return (
+      this.showDataLabels[key] === true
+    );
+
+  }
+
+
+  // ==============================================================
   // CONFIGURAÇÃO PADRÃO
-  // =========================================================
+  // ==============================================================
 
-  getDefaultConfig(key) {
+  getDefaultConfig(
+    key
+  ) {
 
-    const type = this.chartTypes[key] || 'bar';
+    const type =
+      this.chartTypes[key] ||
+      'bar';
+
 
     return {
-      type: type,
+
+      type,
+
       data: {
+
         labels: [],
+
         datasets: []
+
       },
-      options: this.getChartOptions(type)
+
+      options:
+        this.getChartOptions(
+          key,
+          type
+        )
+
     };
 
   }
 
 
-  // =========================================================
-  // OPÇÕES DO GRÁFICO
-  // =========================================================
+  // ==============================================================
+  // OPÇÕES
+  // ==============================================================
 
-  getChartOptions(type) {
+  getChartOptions(
+    key,
+    type
+  ) {
 
-    const isCircular = ['doughnut', 'pie', 'polarArea'].includes(type);
+    const isCircular =
+      this.isCircularType(
+        type
+      );
+
 
     const options = {
+
       responsive: true,
+
       maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            boxWidth: 12,
-            padding: 12,
-            font: {
-              size: 10
-            }
-          }
+
+      animation: {
+
+        duration: 250
+
+      },
+
+      interaction: {
+
+        intersect: false,
+
+        mode: 'index'
+
+      },
+
+      layout: {
+
+        padding: {
+
+          top:
+            this.getChartTopPadding(
+              type
+            ),
+
+          right: 8,
+
+          bottom: 8,
+
+          left: 8
+
         }
+
+      },
+
+      plugins: {
+
+        legend: {
+
+          display: true,
+
+          position: 'bottom',
+
+          align: 'center',
+
+          labels: {
+
+            boxWidth: 12,
+
+            boxHeight: 12,
+
+            padding: 10,
+
+            usePointStyle: false,
+
+            font: {
+
+              size: 10
+
+            }
+
+          }
+
+        },
+
+
+        tooltip: {
+
+          enabled: true
+
+        },
+
+
+        datalabels:
+          this.getDataLabelOptions(
+            key,
+            type
+          )
+
       }
+
     };
 
-    if (!isCircular && type !== 'radar') {
+
+    if (
+      !isCircular &&
+      type !== 'radar'
+    ) {
+
       options.scales = {
+
+        x: {
+
+          ticks: {
+
+            autoSkip: false,
+
+            maxRotation: 45,
+
+            minRotation: 25
+
+          }
+
+        },
+
+
         y: {
-          beginAtZero: true
+
+          beginAtZero: true,
+
+          ticks: {
+
+            precision: 0
+
+          }
+
         }
+
       };
+
     }
+
+
+    if (
+      type === 'radar'
+    ) {
+
+      options.scales = {
+
+        r: {
+
+          beginAtZero: true,
+
+          ticks: {
+
+            precision: 0
+
+          }
+
+        }
+
+      };
+
+    }
+
 
     return options;
 
   }
 
 
-  // =========================================================
-  // ALTERA TIPO DO GRÁFICO
-  // =========================================================
+  // ==============================================================
+  // VERIFICA GRÁFICO CIRCULAR
+  // ==============================================================
 
-  changeChartType(key, type) {
+  isCircularType(
+    type
+  ) {
 
-    console.log(`ChartManager: alterando ${key} para ${type}`);
+    return [
 
-    this.chartTypes[key] = type;
+      'pie',
 
-    const chart = this.charts.get(key);
-    const canvas = document.getElementById(`chart_${key}`);
+      'doughnut',
 
-    if (!chart || !canvas) {
-      return;
+      'polarArea'
+
+    ].includes(
+      type
+    );
+
+  }
+
+
+  // ==============================================================
+  // ESPAÇO SUPERIOR
+  // ==============================================================
+
+  getChartTopPadding(
+    type
+  ) {
+
+    if (
+      type === 'bar'
+    ) {
+
+      return 24;
+
     }
 
-    // Copia os dados atuais
-    const oldData = {
-      labels: [...(chart.data.labels || [])],
-      datasets: (chart.data.datasets || []).map(dataset => ({
-        ...dataset,
-        data: [...(dataset.data || [])],
-        backgroundColor: Array.isArray(dataset.backgroundColor)
-          ? [...dataset.backgroundColor]
-          : dataset.backgroundColor
-      }))
+
+    if (
+      type === 'line'
+    ) {
+
+      return 26;
+
+    }
+
+
+    if (
+      type === 'radar'
+    ) {
+
+      return 18;
+
+    }
+
+
+    return 8;
+
+  }
+
+
+  // ==============================================================
+  // DATALABELS
+  // ==============================================================
+
+  getDataLabelOptions(
+    key,
+    type
+  ) {
+
+    const enabled =
+      this.shouldShowDataLabels(
+        key
+      );
+
+
+    const isCircular =
+      this.isCircularType(
+        type
+      );
+
+
+    // ============================================================
+    // DESATIVADO
+    // ============================================================
+
+    if (!enabled) {
+
+      return {
+
+        display: false
+
+      };
+
+    }
+
+
+    // ============================================================
+    // SPF POR VENDEDOR
+    // ============================================================
+
+    // CORREÇÃO:
+    // Antes este gráfico retornava "display: false" sempre.
+    // Agora ele respeita o seletor de valores normalmente.
+
+    if (
+      key === 'spfVendedor'
+    ) {
+
+      return {
+
+        display: context => {
+
+          const value =
+            Number(
+              context.dataset.data[
+                context.dataIndex
+              ]
+            ) || 0;
+
+
+          return value !== 0
+            ? 'auto'
+            : false;
+
+        },
+
+        color:
+          isCircular
+            ? '#ffffff'
+            : '#1F2937',
+
+        backgroundColor:
+          isCircular
+            ? 'rgba(0, 0, 0, 0.58)'
+            : 'rgba(255, 255, 255, 0.90)',
+
+        borderRadius: 4,
+
+        padding:
+          isCircular
+            ? 4
+            : 3,
+
+        font: {
+
+          size: 9,
+
+          weight: '700'
+
+        },
+
+        anchor:
+          this.getDataLabelAnchor(
+            type
+          ),
+
+        align:
+          this.getDataLabelAlign(
+            type
+          ),
+
+        offset:
+          this.getDataLabelOffset(
+            type
+          ),
+
+        clamp: true,
+
+        clip: false,
+
+        formatter: value =>
+          this.formatInteger(
+            value
+          )
+
+      };
+
+    }
+
+
+    // ============================================================
+    // RETORNO SPF
+    // ============================================================
+
+    if (
+      key === 'retornoSpf'
+    ) {
+
+      return {
+
+        display: context => {
+
+          const value =
+            Number(
+              context.dataset.data[
+                context.dataIndex
+              ]
+            ) || 0;
+
+
+          return value !== 0
+            ? 'auto'
+            : false;
+
+        },
+
+        color: '#ffffff',
+
+        backgroundColor:
+          'rgba(0, 0, 0, 0.58)',
+
+        borderRadius: 4,
+
+        padding: 4,
+
+        font: {
+
+          size: 10,
+
+          weight: '700'
+
+        },
+
+        anchor:
+          isCircular
+            ? 'center'
+            : 'end',
+
+        align:
+          isCircular
+            ? 'center'
+            : 'top',
+
+        offset:
+          isCircular
+            ? 0
+            : 4,
+
+        clamp: true,
+
+        clip: false,
+
+        formatter: value =>
+          this.formatBRL(
+            value
+          )
+
+      };
+
+    }
+
+
+    // ============================================================
+    // COM SPF VS SEM SPF
+    // ============================================================
+
+    if (
+      key === 'spfGeral'
+    ) {
+
+      return {
+
+        display: context => {
+
+          const value =
+            Number(
+              context.dataset.data[
+                context.dataIndex
+              ]
+            ) || 0;
+
+
+          return value !== 0
+            ? 'auto'
+            : false;
+
+        },
+
+        color: '#ffffff',
+
+        backgroundColor:
+          'rgba(0, 0, 0, 0.58)',
+
+        borderRadius: 4,
+
+        padding: 4,
+
+        font: {
+
+          size: 10,
+
+          weight: '700'
+
+        },
+
+        anchor:
+          isCircular
+            ? 'center'
+            : 'end',
+
+        align:
+          isCircular
+            ? 'center'
+            : 'top',
+
+        offset:
+          isCircular
+            ? 0
+            : 4,
+
+        clamp: true,
+
+        clip: false,
+
+        formatter: value =>
+          this.formatInteger(
+            value
+          )
+
+      };
+
+    }
+
+
+    // ============================================================
+    // VENDEDOR / BANCO
+    // ============================================================
+
+    if (
+      key === 'vendedor' ||
+      key === 'banco'
+    ) {
+
+      return this.getFinancialDataLabelOptions(
+        type
+      );
+
+    }
+
+
+    // ============================================================
+    // TIPO R
+    // ============================================================
+
+    if (
+      key === 'rType'
+    ) {
+
+      return {
+
+        display: context => {
+
+          const value =
+            Number(
+              context.dataset.data[
+                context.dataIndex
+              ]
+            ) || 0;
+
+
+          if (
+            value === 0
+          ) {
+
+            return false;
+
+          }
+
+
+          return 'auto';
+
+        },
+
+        color:
+          isCircular
+            ? '#ffffff'
+            : '#1F2937',
+
+        backgroundColor:
+          isCircular
+            ? 'rgba(0, 0, 0, 0.58)'
+            : 'rgba(255, 255, 255, 0.90)',
+
+        borderRadius: 4,
+
+        padding:
+          isCircular
+            ? 4
+            : 3,
+
+        font: {
+
+          size: 9,
+
+          weight: '700'
+
+        },
+
+        anchor:
+          this.getDataLabelAnchor(
+            type
+          ),
+
+        align:
+          this.getDataLabelAlign(
+            type
+          ),
+
+        offset:
+          this.getDataLabelOffset(
+            type
+          ),
+
+        clamp: true,
+
+        clip: false,
+
+        formatter: value =>
+          this.formatInteger(
+            value
+          )
+
+      };
+
+    }
+
+
+    return {
+
+      display: false
+
     };
 
-    chart.destroy();
+  }
 
-    const preparedData = this.prepareDataForChartType(oldData, type);
 
-    const ctx = canvas.getContext('2d');
-    const newChart = new Chart(ctx, {
-      type,
-      data: preparedData,
-      options: this.getChartOptions(type)
-    });
+  // ==============================================================
+  // CONFIGURAÇÃO FINANCEIRA
+  // ==============================================================
 
-    this.charts.set(key, newChart);
+  getFinancialDataLabelOptions(
+    type
+  ) {
 
-    // Redesenha com os dados atuais
-    if (this.lastData) {
-      switch (key) {
-        case 'vendedor':
-          this.updateVendedorChart(this.lastData);
-          break;
-        case 'retornoSpf':
-          this.updateRetornoSpfChart(this.lastData);
-          break;
-        case 'banco':
-          this.updateBancoChart(this.lastData);
-          break;
-        case 'rType':
-          this.updateRTypeChart(this.lastData);
-          break;
-        case 'spfGeral':
-          this.updateSpfGeralChart(this.lastData);
-          break;
-        case 'spfVendedor':
-          this.updateSpfVendedorChart(this.lastData);
-          break;
+    const isCircular =
+      this.isCircularType(
+        type
+      );
+
+
+    return {
+
+      display: context => {
+
+        const value =
+          Number(
+            context.dataset.data[
+              context.dataIndex
+            ]
+          ) || 0;
+
+
+        if (
+          value === 0
+        ) {
+
+          return false;
+
+        }
+
+
+        return 'auto';
+
+      },
+
+
+      color:
+        isCircular
+          ? '#ffffff'
+          : '#1F2937',
+
+
+      backgroundColor:
+        isCircular
+          ? 'rgba(0, 0, 0, 0.58)'
+          : 'rgba(255, 255, 255, 0.90)',
+
+
+      borderRadius: 4,
+
+
+      padding:
+        isCircular
+          ? 4
+          : 3,
+
+
+      font:
+        context =>
+          this.getResponsiveDataLabelFont(
+            context
+          ),
+
+
+      anchor:
+        this.getDataLabelAnchor(
+          type
+        ),
+
+
+      align:
+        this.getDataLabelAlign(
+          type
+        ),
+
+
+      offset:
+        this.getDataLabelOffset(
+          type
+        ),
+
+
+      clamp: true,
+
+      clip: false,
+
+
+      formatter: value =>
+        this.formatBRL(
+          value
+        )
+
+    };
+
+  }
+
+
+  // ==============================================================
+  // FONTE RESPONSIVA
+  // ==============================================================
+
+  getResponsiveDataLabelFont(
+    context
+  ) {
+
+    const chart =
+      context.chart;
+
+
+    const width =
+      chart?.width || 600;
+
+
+    let size = 9;
+
+
+    if (
+      width < 400
+    ) {
+
+      size = 7;
+
+    } else if (
+      width < 600
+    ) {
+
+      size = 8;
+
+    }
+
+
+    return {
+
+      size,
+
+      weight: '700'
+
+    };
+
+  }
+
+
+  // ==============================================================
+  // POSIÇÃO DO VALOR
+  // ==============================================================
+
+  getDataLabelAnchor(
+    type
+  ) {
+
+    if (
+      type === 'bar'
+    ) {
+
+      return 'end';
+
+    }
+
+
+    if (
+      type === 'line'
+    ) {
+
+      return 'center';
+
+    }
+
+
+    if (
+      type === 'radar'
+    ) {
+
+      return 'end';
+
+    }
+
+
+    if (
+      this.isCircularType(
+        type
+      )
+    ) {
+
+      return 'center';
+
+    }
+
+
+    return 'center';
+
+  }
+
+
+  // ==============================================================
+  // ALINHAMENTO DO VALOR
+  // ==============================================================
+
+  getDataLabelAlign(
+    type
+  ) {
+
+    if (
+      type === 'bar'
+    ) {
+
+      return 'top';
+
+    }
+
+
+    if (
+      type === 'line'
+    ) {
+
+      return context => {
+
+        const index =
+          context.dataIndex;
+
+
+        return index % 2 === 0
+          ? 'top'
+          : 'bottom';
+
+      };
+
+    }
+
+
+    if (
+      type === 'radar'
+    ) {
+
+      return 'end';
+
+    }
+
+
+    if (
+      this.isCircularType(
+        type
+      )
+    ) {
+
+      return 'center';
+
+    }
+
+
+    return 'center';
+
+  }
+
+
+  // ==============================================================
+  // DISTÂNCIA DO VALOR
+  // ==============================================================
+
+  getDataLabelOffset(
+    type
+  ) {
+
+    if (
+      type === 'bar'
+    ) {
+
+      return 3;
+
+    }
+
+
+    if (
+      type === 'line'
+    ) {
+
+      return 7;
+
+    }
+
+
+    if (
+      type === 'radar'
+    ) {
+
+      return 5;
+
+    }
+
+
+    if (
+      this.isCircularType(
+        type
+      )
+    ) {
+
+      return 0;
+
+    }
+
+
+    return 4;
+
+  }
+
+
+  // ==============================================================
+  // ALTERA TIPO
+  // ==============================================================
+
+  changeChartType(
+    key,
+    type
+  ) {
+
+    const validTypes =
+      this.getChartTypes(
+        key
+      );
+
+
+    const valid =
+      validTypes.some(
+        item =>
+          item.value === type
+      );
+
+
+    if (!valid) {
+
+      console.warn(
+        `ChartManager: tipo inválido ${type} para ${key}`
+      );
+
+      return;
+
+    }
+
+
+    this.chartTypes[key] =
+      type;
+
+
+    const oldChart =
+      this.charts.get(
+        key
+      );
+
+
+    const canvas =
+      document.getElementById(
+        `chart_${key}`
+      );
+
+
+    if (!canvas) {
+
+      return;
+
+    }
+
+
+    if (oldChart) {
+
+      try {
+
+        oldChart.destroy();
+
+      } catch (error) {
+
+        console.warn(
+          `ChartManager: erro ao destruir ${key}:`,
+          error
+        );
+
       }
+
     }
 
-  }
+
+    this.charts.delete(
+      key
+    );
 
 
-  // =========================================================
-  // PREPARA DATASET DE ACORDO COM O TIPO
-  // =========================================================
+    const ctx =
+      canvas.getContext(
+        '2d'
+      );
 
-  prepareDataForChartType(data, type) {
 
-    if (!data) {
-      return {
+    const config = {
+
+      type,
+
+      data: {
+
         labels: [],
+
         datasets: []
-      };
+
+      },
+
+      options:
+        this.getChartOptions(
+          key,
+          type
+        )
+
+    };
+
+
+    try {
+
+      const newChart =
+        new Chart(
+          ctx,
+          config
+        );
+
+
+      this.charts.set(
+        key,
+        newChart
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        `ChartManager: erro ao criar ${key}:`,
+        error
+      );
+
+      return;
+
     }
 
-    if (['pie', 'doughnut', 'polarArea'].includes(type)) {
 
-      return {
-        labels: data.labels || [],
-        datasets: (data.datasets || []).map((dataset, datasetIndex) => {
-          const amount = Array.isArray(dataset.data) ? dataset.data.length : 0;
-          return {
-            ...dataset,
-            data: [...(dataset.data || [])],
-            backgroundColor: this.getDistinctColors(amount, datasetIndex),
-            borderColor: '#ffffff',
-            borderWidth: 2
-          };
-        })
-      };
+    if (
+      this.lastData
+    ) {
+
+      this.updateSingleChart(
+        key,
+        this.lastData
+      );
 
     }
-
-    return data;
 
   }
 
 
-  // =========================================================
-  // RETORNA CORES DISTINTAS
-  // =========================================================
+  // ==============================================================
+  // ATUALIZA UM GRÁFICO
+  // ==============================================================
 
-  getDistinctColors(count, offset = 0) {
+  updateSingleChart(
+    key,
+    data
+  ) {
 
-    if (!count || count <= 0) {
-      return [];
+    switch (key) {
+
+      case 'vendedor':
+
+        this.updateVendedorChart(
+          data
+        );
+
+        break;
+
+
+      case 'retornoSpf':
+
+        this.updateRetornoSpfChart(
+          data
+        );
+
+        break;
+
+
+      case 'banco':
+
+        this.updateBancoChart(
+          data
+        );
+
+        break;
+
+
+      case 'rType':
+
+        this.updateRTypeChart(
+          data
+        );
+
+        break;
+
+
+      case 'spfGeral':
+
+        this.updateSpfGeralChart(
+          data
+        );
+
+        break;
+
+
+      case 'spfVendedor':
+
+        this.updateSpfVendedorChart(
+          data
+        );
+
+        break;
+
     }
+
+  }
+
+
+  // ==============================================================
+  // UPDATE GERAL
+  // ==============================================================
+
+  update(data) {
+
+    this.lastData =
+      Array.isArray(data)
+        ? data
+        : [];
+
+
+    if (
+      !this.chartsReady ||
+      this.charts.size === 0
+    ) {
+
+      this.pendingUpdate = true;
+
+      return;
+
+    }
+
+
+    if (
+      this.lastData.length === 0
+    ) {
+
+      this.clearCharts();
+
+      return;
+
+    }
+
+
+    this.pendingUpdate = false;
+
+
+    const updates = [
+
+      [
+        'vendedor',
+        () =>
+          this.updateVendedorChart(
+            this.lastData
+          )
+      ],
+
+      [
+        'retornoSpf',
+        () =>
+          this.updateRetornoSpfChart(
+            this.lastData
+          )
+      ],
+
+      [
+        'banco',
+        () =>
+          this.updateBancoChart(
+            this.lastData
+          )
+      ],
+
+      [
+        'rType',
+        () =>
+          this.updateRTypeChart(
+            this.lastData
+          )
+      ],
+
+      [
+        'spfGeral',
+        () =>
+          this.updateSpfGeralChart(
+            this.lastData
+          )
+      ],
+
+      [
+        'spfVendedor',
+        () =>
+          this.updateSpfVendedorChart(
+            this.lastData
+          )
+      ]
+
+    ];
+
+
+    updates.forEach(
+      ([key, callback]) => {
+
+        try {
+
+          callback();
+
+        } catch (error) {
+
+          console.error(
+            `ChartManager: erro ao atualizar ${key}:`,
+            error
+          );
+
+        }
+
+      }
+    );
+
+  }
+
+
+  // ==============================================================
+  // VENDEDOR
+  // ==============================================================
+
+  updateVendedorChart(
+    data
+  ) {
+
+    const sellerMap =
+      new Map();
+
+
+    data.forEach(
+      d => {
+
+        if (
+          d.active === false
+        ) {
+
+          return;
+
+        }
+
+
+        (
+          d.sellers || []
+        ).forEach(
+          s => {
+
+            if (
+              !this.isSellerActive(
+                s.name
+              )
+            ) {
+
+              return;
+
+            }
+
+
+            const nameKey =
+              this.normalizeName(
+                s.name
+              );
+
+
+            if (
+              !sellerMap.has(
+                nameKey
+              )
+            ) {
+
+              sellerMap.set(
+                nameKey,
+                {
+
+                  label:
+                    s.name,
+
+                  values: {}
+
+                }
+              );
+
+            }
+
+
+            const sellerData =
+              sellerMap.get(
+                nameKey
+              );
+
+
+            sellerData.values[
+              d.label
+            ] =
+              (
+                sellerData.values[
+                  d.label
+                ] || 0
+              ) +
+              (
+                Number(
+                  s.receita
+                ) || 0
+              );
+
+          }
+        );
+
+      }
+    );
+
+
+    const sellerEntries =
+      Array.from(
+        sellerMap.values()
+      );
+
+
+    const labels =
+      sellerEntries.map(
+        item =>
+          item.label
+      );
+
+
+    const activeData =
+      data.filter(
+        d =>
+          d.active !== false
+      );
+
+
+    const datasets =
+      activeData.map(
+        (d, index) => {
+
+          const color =
+            CHART_COLORS[
+              index %
+              CHART_COLORS.length
+            ];
+
+
+          return {
+
+            label:
+              d.label,
+
+            data:
+              sellerEntries.map(
+                item =>
+                  Number(
+                    item.values[
+                      d.label
+                    ]
+                  ) || 0
+              ),
+
+            backgroundColor:
+              color,
+
+            borderColor:
+              color,
+
+            borderRadius:
+              4,
+
+            borderWidth:
+              1
+
+          };
+
+        }
+      );
+
+
+    this.updateChartData(
+      'vendedor',
+      labels,
+      datasets
+    );
+
+  }
+
+
+  // ==============================================================
+  // RETORNO SPF
+  // ==============================================================
+
+  updateRetornoSpfChart(
+    data
+  ) {
+
+    let totalRetorno = 0;
+
+    let totalSpf = 0;
+
+
+    data.forEach(
+      d => {
+
+        if (
+          d.active === false
+        ) {
+
+          return;
+
+        }
+
+
+        (
+          d.sellers || []
+        ).forEach(
+          s => {
+
+            if (
+              !this.isSellerActive(
+                s.name
+              )
+            ) {
+
+              return;
+
+            }
+
+
+            totalRetorno +=
+              Number(
+                s.retorno
+              ) || 0;
+
+
+            totalSpf +=
+              Number(
+                s.spfValor
+              ) || 0;
+
+          }
+        );
+
+      }
+    );
+
+
+    this.setCircularChartData(
+
+      'retornoSpf',
+
+      [
+        'Retorno',
+        'SPF a pagar'
+      ],
+
+      [
+        totalRetorno,
+        totalSpf
+      ],
+
+      [
+        this.pieColors[1],
+        this.pieColors[2]
+      ]
+
+    );
+
+  }
+
+
+  // ==============================================================
+  // BANCO
+  // ==============================================================
+
+  updateBancoChart(
+    data
+  ) {
+
+    const bankSet =
+      new Set();
+
+
+    data.forEach(
+      d => {
+
+        if (
+          d.active === false
+        ) {
+
+          return;
+
+        }
+
+
+        Object.keys(
+          d.bancos || {}
+        ).forEach(
+          bank =>
+            bankSet.add(
+              bank
+            )
+        );
+
+      }
+    );
+
+
+    const labels =
+      Array.from(
+        bankSet
+      );
+
+
+    const activeData =
+      data.filter(
+        d =>
+          d.active !== false
+      );
+
+
+    const currentType =
+      this.chartTypes.banco;
+
+
+    if (
+      this.isCircularType(
+        currentType
+      )
+    ) {
+
+      const totals =
+        labels.map(
+          bank =>
+            activeData.reduce(
+              (
+                total,
+                d
+              ) =>
+                total +
+                (
+                  Number(
+                    (
+                      d.bancos || {}
+                    )[bank]
+                  ) || 0
+                ),
+              0
+            )
+        );
+
+
+      this.setCircularChartData(
+
+        'banco',
+
+        labels,
+
+        totals,
+
+        this.getDistinctColors(
+          labels.length
+        )
+
+      );
+
+
+      return;
+
+    }
+
+
+    const datasets =
+      activeData.map(
+        (d, index) => {
+
+          const color =
+            CHART_COLORS[
+              index %
+              CHART_COLORS.length
+            ];
+
+
+          return {
+
+            label:
+              d.label,
+
+            data:
+              labels.map(
+                bank =>
+                  Number(
+                    (
+                      d.bancos || {}
+                    )[bank]
+                  ) || 0
+              ),
+
+            backgroundColor:
+              color,
+
+            borderColor:
+              color,
+
+            borderRadius:
+              4,
+
+            borderWidth:
+              1
+
+          };
+
+        }
+      );
+
+
+    this.updateChartData(
+      'banco',
+      labels,
+      datasets
+    );
+
+  }
+
+
+  // ==============================================================
+  // TIPO R
+  // ==============================================================
+
+  updateRTypeChart(
+    data
+  ) {
+
+    const rLabels = [
+
+      'R0',
+      'R1',
+      'R2',
+      'R3',
+      'R4',
+      'R5',
+      'R150',
+      'R100',
+      'R75',
+      'R50'
+
+    ];
+
+
+    const activeData =
+      data.filter(
+        d =>
+          d.active !== false
+      );
+
+
+    const currentType =
+      this.chartTypes.rType;
+
+
+    if (
+      this.isCircularType(
+        currentType
+      )
+    ) {
+
+      const totals =
+        rLabels.map(
+          r => {
+
+            let total = 0;
+
+
+            activeData.forEach(
+              d => {
+
+                (
+                  d.sellers || []
+                ).forEach(
+                  s => {
+
+                    if (
+                      !this.isSellerActive(
+                        s.name
+                      )
+                    ) {
+
+                      return;
+
+                    }
+
+
+                    total +=
+                      Number(
+                        s[r]
+                      ) || 0;
+
+                  }
+                );
+
+              }
+            );
+
+
+            return total;
+
+          }
+        );
+
+
+      this.setCircularChartData(
+
+        'rType',
+
+        rLabels,
+
+        totals,
+
+        this.getDistinctColors(
+          rLabels.length
+        )
+
+      );
+
+
+      return;
+
+    }
+
+
+    const datasets =
+      activeData.map(
+        (d, index) => {
+
+          const color =
+            CHART_COLORS[
+              index %
+              CHART_COLORS.length
+            ];
+
+
+          return {
+
+            label:
+              d.label,
+
+            data:
+              rLabels.map(
+                r => {
+
+                  let total = 0;
+
+
+                  (
+                    d.sellers || []
+                  ).forEach(
+                    s => {
+
+                      if (
+                        !this.isSellerActive(
+                          s.name
+                        )
+                      ) {
+
+                        return;
+
+                      }
+
+
+                      total +=
+                        Number(
+                          s[r]
+                        ) || 0;
+
+                    }
+                  );
+
+
+                  return total;
+
+                }
+              ),
+
+            backgroundColor:
+              color,
+
+            borderColor:
+              color,
+
+            borderRadius:
+              4,
+
+            borderWidth:
+              1
+
+          };
+
+        }
+      );
+
+
+    this.updateChartData(
+      'rType',
+      rLabels,
+      datasets
+    );
+
+  }
+
+
+  // ==============================================================
+  // COM SPF VS SEM SPF
+  // ==============================================================
+
+  updateSpfGeralChart(
+    data
+  ) {
+
+    let comSpf = 0;
+
+    let totalOperacoes = 0;
+
+
+    data.forEach(
+      d => {
+
+        if (
+          d.active === false
+        ) {
+
+          return;
+
+        }
+
+
+        (
+          d.sellers || []
+        ).forEach(
+          s => {
+
+            if (
+              !this.isSellerActive(
+                s.name
+              )
+            ) {
+
+              return;
+
+            }
+
+
+            const spf =
+              Number(
+                s.SPF
+              ) || 0;
+
+
+            const operacoes =
+              Number(
+                s.operacoes
+              ) || 0;
+
+
+            comSpf +=
+              Math.max(
+                0,
+                spf
+              );
+
+
+            totalOperacoes +=
+              Math.max(
+                0,
+                operacoes
+              );
+
+          }
+        );
+
+      }
+    );
+
+
+    const semSpf =
+      Math.max(
+        0,
+        totalOperacoes -
+        comSpf
+      );
+
+
+    this.setCircularChartData(
+
+      'spfGeral',
+
+      [
+        'Com SPF',
+        'Sem SPF'
+      ],
+
+      [
+        comSpf,
+        semSpf
+      ],
+
+      [
+        this.spfColors.comSpf,
+        this.spfColors.semSpf
+      ]
+
+    );
+
+  }
+
+
+  // ==============================================================
+  // SPF POR VENDEDOR
+  // ==============================================================
+
+  updateSpfVendedorChart(
+    data
+  ) {
+
+    const sellerMap =
+      new Map();
+
+
+    data.forEach(
+      d => {
+
+        if (
+          d.active === false
+        ) {
+
+          return;
+
+        }
+
+
+        (
+          d.sellers || []
+        ).forEach(
+          s => {
+
+            if (
+              !this.isSellerActive(
+                s.name
+              )
+            ) {
+
+              return;
+
+            }
+
+
+            const nameKey =
+              this.normalizeName(
+                s.name
+              );
+
+
+            if (
+              !sellerMap.has(
+                nameKey
+              )
+            ) {
+
+              sellerMap.set(
+                nameKey,
+                {
+
+                  label:
+                    s.name,
+
+                  spfCount:
+                    0,
+
+                  totalOperacoes:
+                    0
+
+                }
+              );
+
+            }
+
+
+            const seller =
+              sellerMap.get(
+                nameKey
+              );
+
+
+            seller.spfCount +=
+              Number(
+                s.SPF
+              ) || 0;
+
+
+            seller.totalOperacoes +=
+              Number(
+                s.operacoes
+              ) || 0;
+
+          }
+        );
+
+      }
+    );
+
+
+    const sellerEntries =
+      Array.from(
+        sellerMap.values()
+      );
+
+
+    sellerEntries.sort(
+      (
+        a,
+        b
+      ) =>
+        b.spfCount -
+        a.spfCount
+    );
+
+
+    const labels =
+      sellerEntries.map(
+        item =>
+          item.label
+      );
+
+
+    const values =
+      sellerEntries.map(
+        item =>
+          item.spfCount
+      );
+
+
+    const chart =
+      this.charts.get(
+        'spfVendedor'
+      );
+
+
+    if (!chart) {
+
+      return;
+
+    }
+
+
+    const currentType =
+      this.chartTypes.spfVendedor;
+
+
+    if (
+      this.isCircularType(
+        currentType
+      )
+    ) {
+
+      const filtered =
+        sellerEntries.filter(
+          item =>
+            item.spfCount > 0
+        );
+
+
+      if (
+        filtered.length === 0
+      ) {
+
+        this.setCircularChartData(
+
+          'spfVendedor',
+
+          [
+            'Sem SPF'
+          ],
+
+          [
+            1
+          ],
+
+          [
+            '#E5E7EB'
+          ]
+
+        );
+
+
+        return;
+
+      }
+
+
+      this.setCircularChartData(
+
+        'spfVendedor',
+
+        filtered.map(
+          item =>
+            item.label
+        ),
+
+        filtered.map(
+          item =>
+            item.spfCount
+        ),
+
+        this.getDistinctColors(
+          filtered.length
+        )
+
+      );
+
+
+      return;
+
+    }
+
+
+    chart.data.labels =
+      [
+        ...labels
+      ];
+
+
+    chart.data.datasets = [
+
+      {
+
+        label:
+          'Quantidade de SPF',
+
+        data:
+          [
+            ...values
+          ],
+
+        backgroundColor:
+          this.spfColors.comSpf,
+
+        borderColor:
+          this.spfColors.comSpf,
+
+        borderRadius:
+          4,
+
+        borderWidth:
+          1
+
+      }
+
+    ];
+
+
+    chart.update(
+      'none'
+    );
+
+  }
+
+
+  // ==============================================================
+  // ATUALIZA DADOS
+  // ==============================================================
+
+  updateChartData(
+    key,
+    labels,
+    datasets
+  ) {
+
+    const chart =
+      this.charts.get(
+        key
+      );
+
+
+    if (!chart) {
+
+      return;
+
+    }
+
+
+    const type =
+      this.chartTypes[key];
+
+
+    if (
+      this.isCircularType(
+        type
+      )
+    ) {
+
+      const source =
+        datasets &&
+        datasets.length
+          ? datasets[0]
+          : null;
+
+
+      if (!source) {
+
+        chart.data.labels =
+          Array.isArray(labels)
+            ? [
+                ...labels
+              ]
+            : [];
+
+
+        chart.data.datasets =
+          [];
+
+
+        chart.update(
+          'none'
+        );
+
+
+        return;
+
+      }
+
+
+      const values =
+        Array.isArray(
+          source.data
+        )
+          ? [
+              ...source.data
+            ]
+          : [];
+
+
+      chart.data.labels =
+        Array.isArray(labels)
+          ? [
+              ...labels
+            ]
+          : [];
+
+
+      chart.data.datasets = [
+
+        {
+
+          label:
+            source.label || '',
+
+          data:
+            values,
+
+          backgroundColor:
+            this.getDistinctColors(
+              values.length
+            ),
+
+          borderColor:
+            '#ffffff',
+
+          borderWidth:
+            2
+
+        }
+
+      ];
+
+    } else {
+
+      chart.data.labels =
+        Array.isArray(labels)
+          ? [
+              ...labels
+            ]
+          : [];
+
+
+      chart.data.datasets =
+        Array.isArray(datasets)
+          ? datasets
+          : [];
+
+    }
+
+
+    chart.update(
+      'none'
+    );
+
+  }
+
+
+  // ==============================================================
+  // GRÁFICO CIRCULAR
+  // ==============================================================
+
+  setCircularChartData(
+    key,
+    labels,
+    values,
+    colors
+  ) {
+
+    const chart =
+      this.charts.get(
+        key
+      );
+
+
+    if (!chart) {
+
+      return;
+
+    }
+
+
+    const safeLabels =
+      Array.isArray(labels)
+        ? [
+            ...labels
+          ]
+        : [];
+
+
+    const safeValues =
+      Array.isArray(values)
+        ? values.map(
+            value =>
+              Number(
+                value
+              ) || 0
+          )
+        : [];
+
+
+    const safeColors =
+      Array.isArray(colors)
+        ? [
+            ...colors
+          ]
+        : this.getDistinctColors(
+            safeValues.length
+          );
+
+
+    chart.data.labels =
+      safeLabels;
+
+
+    chart.data.datasets = [
+
+      {
+
+        data:
+          safeValues,
+
+        backgroundColor:
+          safeColors,
+
+        borderColor:
+          '#ffffff',
+
+        borderWidth:
+          2
+
+      }
+
+    ];
+
+
+    chart.update(
+      'none'
+    );
+
+  }
+
+
+  // ==============================================================
+  // CORES
+  // ==============================================================
+
+  getDistinctColors(
+    count,
+    offset = 0
+  ) {
+
+    if (
+      !count ||
+      count <= 0
+    ) {
+
+      return [];
+
+    }
+
 
     const colors = [];
 
-    for (let i = 0; i < count; i++) {
-      const index = (i + offset) % this.pieColors.length;
-      colors.push(this.pieColors[index]);
+
+    for (
+      let i = 0;
+      i < count;
+      i++
+    ) {
+
+      const index =
+        (
+          i +
+          offset
+        ) %
+        this.pieColors.length;
+
+
+      colors.push(
+        this.pieColors[index]
+      );
+
     }
+
 
     return colors;
 
   }
 
 
-  // =========================================================
-  // UPDATE GERAL
-  // =========================================================
+  // ==============================================================
+  // VENDEDORES ATIVOS
+  // ==============================================================
 
-  update(data) {
+  isSellerActive(
+    sellerName
+  ) {
 
-    console.log(
-      'ChartManager.update: recebeu',
-      data?.length || 0,
-      'lojas'
-    );
+    if (
+      this.activeSellers.size === 0
+    ) {
 
-    this.lastData = Array.isArray(data) ? data : [];
-
-    if (!this.chartsReady || this.charts.size === 0) {
-      // Os dados podem chegar no mesmo ciclo em que os canvases ainda
-      // estão sendo montados. Guarda a atualização e executa assim que
-      // os gráficos estiverem prontos.
-      this.pendingUpdate = true;
-      return;
-    }
-
-    if (this.lastData.length === 0) {
-      this.clearCharts();
-      return;
-    }
-
-    this.pendingUpdate = false;
-
-    // Um gráfico com dados inválidos não pode impedir os demais de serem
-    // desenhados. Cada atualização é isolada para que o carregamento do CSV
-    // sempre resulte em gráficos visíveis.
-    const updates = [
-      ['vendedor', () => this.updateVendedorChart(this.lastData)],
-      ['retornoSpf', () => this.updateRetornoSpfChart(this.lastData)],
-      ['banco', () => this.updateBancoChart(this.lastData)],
-      ['rType', () => this.updateRTypeChart(this.lastData)],
-      ['spfGeral', () => this.updateSpfGeralChart(this.lastData)],
-      ['spfVendedor', () => this.updateSpfVendedorChart(this.lastData)]
-    ];
-
-    updates.forEach(([key, callback]) => {
-      try {
-        callback();
-      } catch (error) {
-        console.error(`ChartManager: erro ao atualizar ${key}:`, error);
-      }
-    });
-
-    // Segundo ciclo após o layout garante que Chart.js calcule corretamente
-    // a área dos canvases, inclusive para pizza/rosca.
-    requestAnimationFrame(() => {
-      this.charts.forEach(chart => {
-        try {
-          chart.resize();
-          chart.update('none');
-        } catch (error) {
-          console.error('ChartManager: erro ao redesenhar gráfico:', error);
-        }
-      });
-    });
-
-  }
-
-
-  // =========================================================
-  // VERIFICA VENDEDOR ATIVO
-  // =========================================================
-
-  isSellerActive(sellerName) {
-
-    if (this.activeSellers.size === 0) {
       return true;
-    }
-
-    const key = sellerName
-      .toUpperCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
-
-    return this.activeSellers.has(key);
-
-  }
-
-
-  // =========================================================
-  // GRÁFICO VENDEDOR
-  // =========================================================
-
-  updateVendedorChart(data) {
-
-    const sellerMap = new Map();
-
-    data.forEach(d => {
-      if (d.active === false) return;
-      (d.sellers || []).forEach(s => {
-        if (!this.isSellerActive(s.name)) return;
-        const nameKey = s.name.toUpperCase();
-        if (!sellerMap.has(nameKey)) {
-          sellerMap.set(nameKey, {
-            label: s.name,
-            values: {}
-          });
-        }
-        sellerMap.get(nameKey).values[d.label] =
-          (sellerMap.get(nameKey).values[d.label] || 0) + (s.receita || 0);
-      });
-    });
-
-    const sellerEntries = Array.from(sellerMap.values());
-    const labels = sellerEntries.map(x => x.label);
-    const activeData = data.filter(d => d.active !== false);
-
-    const datasets = activeData.map((d, i) => ({
-      label: d.label,
-      data: sellerEntries.map(x => x.values[d.label] || 0),
-      backgroundColor: CHART_COLORS[i % CHART_COLORS.length],
-      borderRadius: 4
-    }));
-
-    this.updateChartData('vendedor', labels, datasets);
-
-  }
-
-
-  // =========================================================
-  // RETORNO VS SPF
-  // =========================================================
-
-  updateRetornoSpfChart(data) {
-    if (!Array.isArray(data) || data.length === 0) return;
-
-    let totalRet = 0;
-    let totalSpf = 0;
-
-    data.forEach(d => {
-      if (!d || d.active === false) return;
-
-      if (this.activeSellers.size > 0) {
-        (Array.isArray(d.sellers) ? d.sellers : []).forEach(s => {
-          if (!this.isSellerActive(s?.name)) return;
-          totalRet += Number(s?.retorno) || 0;
-          totalSpf += Number(s?.spfValor) || 0;
-        });
-      } else {
-        totalRet += Number(d?.kpis?.retorno) || 0;
-        totalSpf += Number(d?.kpis?.spfPagar) || 0;
-      }
-    });
-
-    const chart = this.ensureRetornoSpfChart();
-    if (!chart) return;
-
-    chart.data.labels = ['Retorno SPF', 'SPF a pagar'];
-    chart.data.datasets = [{
-      label: 'Valores',
-      data: [totalRet, totalSpf],
-      backgroundColor: ['#16A34A', '#F59E0B'],
-      borderColor: '#ffffff',
-      borderWidth: 2,
-      borderRadius: 4,
-      hoverOffset: 6
-    }];
-
-    chart.options = {
-      ...this.getChartOptions(this.chartTypes.retornoSpf),
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        ...this.getChartOptions(this.chartTypes.retornoSpf).plugins,
-        legend: {
-          position: 'bottom'
-        },
-        tooltip: {
-          callbacks: {
-            label: (context) => {
-              const value = Number(context.raw) || 0;
-              return ` ${context.label}: R$ ${value.toLocaleString('pt-BR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-              })}`;
-            }
-          }
-        }
-      }
-    };
-
-    chart.resize();
-    chart.update('none');
-  }
-
-
-  // =========================================================
-  // GRÁFICO BANCO
-  // =========================================================
-
-  updateBancoChart(data) {
-
-    const bankSet = new Set();
-
-    data.forEach(d => {
-      if (d.active === false) return;
-      Object.keys(d.bancos || {}).forEach(bank => bankSet.add(bank));
-    });
-
-    const labels = Array.from(bankSet);
-    const activeData = data.filter(d => d.active !== false);
-    const chart = this.charts.get('banco');
-    const currentType = this.chartTypes.banco;
-
-    if (['pie', 'doughnut', 'polarArea'].includes(currentType)) {
-
-      const totals = labels.map(bank => {
-        return activeData.reduce((total, d) => {
-          return total + (Number((d.bancos || {})[bank]) || 0);
-        }, 0);
-      });
-
-      if (chart) {
-        chart.data.labels = labels;
-        chart.data.datasets = [{
-          data: totals,
-          backgroundColor: this.getDistinctColors(labels.length),
-          borderColor: '#ffffff',
-          borderWidth: 2
-        }];
-        chart.update();
-      }
-
-      return;
 
     }
 
-    const datasets = activeData.map((d, i) => ({
-      label: d.label,
-      data: labels.map(bank => (d.bancos || {})[bank] || 0),
-      backgroundColor: CHART_COLORS[i % CHART_COLORS.length],
-      borderRadius: 4
-    }));
 
-    this.updateChartData('banco', labels, datasets);
-
-  }
-
-
-  // =========================================================
-  // GRÁFICO R
-  // =========================================================
-
-  updateRTypeChart(data) {
-
-    const rLabels = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R150', 'R100', 'R75', 'R50'];
-    const activeData = data.filter(d => d.active !== false);
-    const chart = this.charts.get('rType');
-    const currentType = this.chartTypes.rType;
-
-    if (['pie', 'doughnut', 'polarArea'].includes(currentType)) {
-
-      const totals = rLabels.map(r => {
-        let total = 0;
-        activeData.forEach(d => {
-          (d.sellers || []).forEach(s => {
-            if (!this.isSellerActive(s.name)) return;
-            total += Number(s[r]) || 0;
-          });
-        });
-        return total;
-      });
-
-      if (chart) {
-        chart.data.labels = rLabels;
-        chart.data.datasets = [{
-          data: totals,
-          backgroundColor: this.getDistinctColors(rLabels.length),
-          borderColor: '#ffffff',
-          borderWidth: 2
-        }];
-        chart.update();
-      }
-
-      return;
-
-    }
-
-    const datasets = activeData.map((d, i) => ({
-      label: d.label,
-      data: rLabels.map(r => {
-        let total = 0;
-        (d.sellers || []).forEach(s => {
-          if (!this.isSellerActive(s.name)) return;
-          total += Number(s[r]) || 0;
-        });
-        return total;
-      }),
-      backgroundColor: CHART_COLORS[i % CHART_COLORS.length],
-      borderRadius: 4
-    }));
-
-    this.updateChartData('rType', rLabels, datasets);
-
-  }
-
-
-  // =========================================================
-  // NOVO GRÁFICO: SPF GERAL
-  // USA A PROPRIEDADE SPF (MAIÚSCULO) QUE É A QUANTIDADE DE SPF
-  // =========================================================
-
-  updateSpfGeralChart(data) {
-    let comSpf = 0;
-    let semSpf = 0;
-
-    data.forEach(d => {
-      if (d.active === false) return;
-
-      (d.sellers || []).forEach(s => {
-        if (!this.isSellerActive(s.name)) return;
-
-        const spfCount = Number(s.SPF) || 0;
-        const totalOperations = Number(s.operacoes) || 0;
-
-        // SPF é contado por operação, não por vendedor.
-        comSpf += spfCount;
-        semSpf += Math.max(0, totalOperations - spfCount);
-      });
-    });
-
-    console.log('SPF Geral:', {
-      comSpf,
-      semSpf,
-      totalOperacoes: comSpf + semSpf
-    });
-
-    const chart = this.charts.get('spfGeral');
-    if (!chart) return;
-
-    chart.data.labels = ['Com SPF', 'Sem SPF'];
-    chart.data.datasets = [{
-      data: [comSpf, semSpf],
-      backgroundColor: [this.spfColors.comSpf, this.spfColors.semSpf],
-      borderColor: '#ffffff',
-      borderWidth: 2
-    }];
-
-    chart.update();
-  }
-
-  // =========================================================
-  // SPF POR VENDEDOR
-  // =========================================================
-
-  updateSpfVendedorChart(data) {
-    const sellerMap = new Map();
-
-    data.forEach(d => {
-      if (d.active === false) return;
-
-      (d.sellers || []).forEach(s => {
-        if (!this.isSellerActive(s.name)) return;
-
-        const nameKey = String(s.name || '')
-          .toUpperCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .trim();
-
-        if (!nameKey) return;
-
-        if (!sellerMap.has(nameKey)) {
-          sellerMap.set(nameKey, {
-            label: s.name,
-            spfCount: 0,
-            totalPropostas: 0
-          });
-        }
-
-        const sellerData = sellerMap.get(nameKey);
-
-        sellerData.spfCount += Number(s.SPF) || 0;
-        sellerData.totalPropostas += Number(s.operacoes) || 0;
-      });
-    });
-
-    const sellerEntries = Array.from(sellerMap.values())
-      .sort((a, b) => {
-        if (b.spfCount !== a.spfCount) {
-          return b.spfCount - a.spfCount;
-        }
-
-        return a.label.localeCompare(b.label, 'pt-BR');
-      });
-
-    console.log('SPF por Vendedor:', sellerEntries);
-
-    const chart = this.charts.get('spfVendedor');
-    if (!chart) return;
-
-    const currentType = this.chartTypes.spfVendedor;
-
-    if (['pie', 'doughnut', 'polarArea'].includes(currentType)) {
-      const filteredData = sellerEntries.filter(
-        seller => seller.spfCount > 0
+    const key =
+      this.normalizeName(
+        sellerName
       );
 
-      if (filteredData.length === 0) {
-        chart.data.labels = ['Sem SPF'];
-        chart.data.datasets = [{
-          data: [1],
-          backgroundColor: ['#e5e7eb'],
-          borderColor: '#ffffff',
-          borderWidth: 2
-        }];
 
-        chart.update();
-        return;
-      }
-
-      chart.data.labels = filteredData.map(seller => seller.label);
-      chart.data.datasets = [{
-        data: filteredData.map(seller => seller.spfCount),
-        backgroundColor: this.getDistinctColors(filteredData.length),
-        borderColor: '#ffffff',
-        borderWidth: 2
-      }];
-    } else {
-      chart.data.labels = sellerEntries.map(seller => seller.label);
-      chart.data.datasets = [{
-        label: 'Quantidade de SPF',
-        data: sellerEntries.map(seller => seller.spfCount),
-        backgroundColor: this.spfColors.comSpf,
-        borderRadius: 4
-      }];
-    }
-
-    chart.update();
-  }
-
-  // =========================================================
-  // ATUALIZA DADOS DO GRÁFICO
-  // =========================================================
-
-  updateChartData(key, labels, datasets) {
-
-    const chart = this.charts.get(key);
-
-    if (!chart) return;
-
-    const type = this.chartTypes[key];
-
-    if (['pie', 'doughnut', 'polarArea'].includes(type)) {
-
-      const source = datasets && datasets.length ? datasets[0] : null;
-
-      if (!source) {
-        chart.data.labels = labels || [];
-        chart.data.datasets = [];
-        chart.update();
-        return;
-      }
-
-      const values = Array.isArray(source.data) ? source.data : [];
-
-      chart.data.labels = labels || [];
-      chart.data.datasets = [{
-        ...source,
-        data: [...values],
-        backgroundColor: this.getDistinctColors(values.length),
-        borderColor: '#ffffff',
-        borderWidth: 2
-      }];
-
-    } else {
-
-      chart.data.labels = labels || [];
-      chart.data.datasets = datasets || [];
-
-    }
-
-    chart.update();
+    return this.activeSellers.has(
+      key
+    );
 
   }
 
 
-  // =========================================================
-  // LIMPA TODOS OS GRÁFICOS
-  // =========================================================
+  // ==============================================================
+  // NORMALIZA NOME
+  // ==============================================================
+
+  normalizeName(
+    value
+  ) {
+
+    return String(
+      value ?? ''
+    )
+      .trim()
+      .toUpperCase()
+      .normalize(
+        'NFD'
+      )
+      .replace(
+        /[\u0300-\u036f]/g,
+        ''
+      );
+
+  }
+
+
+  // ==============================================================
+  // INTEIRO
+  // ==============================================================
+
+  formatInteger(
+    value
+  ) {
+
+    const number =
+      Number(
+        value
+      ) || 0;
+
+
+    return number.toLocaleString(
+      'pt-BR',
+      {
+
+        maximumFractionDigits:
+          0
+
+      }
+    );
+
+  }
+
+
+  // ==============================================================
+  // BRL
+  // ==============================================================
+
+  formatBRL(
+    value
+  ) {
+
+    const number =
+      Number(
+        value
+      ) || 0;
+
+
+    return number.toLocaleString(
+      'pt-BR',
+      {
+
+        style:
+          'currency',
+
+        currency:
+          'BRL',
+
+        minimumFractionDigits:
+          2,
+
+        maximumFractionDigits:
+          2
+
+      });
+
+  }
+
+
+  // ==============================================================
+  // LIMPA
+  // ==============================================================
 
   clearCharts() {
 
-    this.charts.forEach(chart => {
-      chart.data.labels = [];
-      chart.data.datasets = [];
-      chart.update();
-    });
+    this.charts.forEach(
+      chart => {
+
+        if (!chart) {
+
+          return;
+
+        }
+
+
+        try {
+
+          chart.data.labels =
+            [];
+
+          chart.data.datasets =
+            [];
+
+
+          chart.update(
+            'none'
+          );
+
+        } catch (error) {
+
+          console.warn(
+            'ChartManager: erro ao limpar gráfico:',
+            error
+          );
+
+        }
+
+      }
+    );
+
+  }
+
+
+  // ==============================================================
+  // DESTROI
+  // ==============================================================
+
+  destroyCharts() {
+
+    this.charts.forEach(
+      chart => {
+
+        if (!chart) {
+
+          return;
+
+        }
+
+
+        try {
+
+          chart.destroy();
+
+        } catch (error) {
+
+          console.warn(
+            'ChartManager: erro ao destruir gráfico:',
+            error
+          );
+
+        }
+
+      }
+    );
+
+
+    this.charts.clear();
+
+    this.chartsReady = false;
 
   }
 
