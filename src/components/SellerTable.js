@@ -5,8 +5,8 @@ export class SellerTable {
     this.eventBus = eventBus;
     this.currentData = [];
     this.sortConfig = {
-      field: 'r0',
-      direction: 'desc'
+      field: '', // Inicia vazio (sem filtro padrão)
+      direction: ''
     };
     this.activeSellers = new Set();
   }
@@ -16,6 +16,7 @@ export class SellerTable {
       <div class="seller-sort-control">
         <label for="sellerSort">Ordenar por:</label>
         <select id="sellerSort">
+          <option value="">Padrão (Sem ordenação)</option>
           <option value="r0-desc">R0 — maior → menor</option>
           <option value="r0-asc">R0 — menor → maior</option>
           <option value="r1-desc">R1 — maior → menor</option>
@@ -28,14 +29,14 @@ export class SellerTable {
           <option value="r4-asc">R4 — menor → maior</option>
           <option value="r5-desc">R5 — maior → menor</option>
           <option value="r5-asc">R5 — menor → maior</option>
-          <option value="r150-desc">R150 — maior → menor</option>
-          <option value="r150-asc">R150 — menor → maior</option>
-          <option value="r100-desc">R100 — maior → menor</option>
-          <option value="r100-asc">R100 — menor → maior</option>
-          <option value="r75-desc">R75 — maior → menor</option>
-          <option value="r75-asc">R75 — menor → maior</option>
           <option value="r50-desc">R50 — maior → menor</option>
           <option value="r50-asc">R50 — menor → maior</option>
+          <option value="r75-desc">R75 — maior → menor</option>
+          <option value="r75-asc">R75 — menor → maior</option>
+          <option value="r100-desc">R100 — maior → menor</option>
+          <option value="r100-asc">R100 — menor → maior</option>
+          <option value="r150-desc">R150 — maior → menor</option>
+          <option value="r150-asc">R150 — menor → maior</option>
           <option value="spf-desc">SPF — maior → menor</option>
           <option value="spf-asc">SPF — menor → maior</option>
           <option value="receita-desc">Receita (R$) — maior → menor</option>
@@ -50,22 +51,22 @@ export class SellerTable {
         <table>
           <thead>
             <tr>
-              <th>Nº</th>
-              <th>Vendedor</th>
-              <th>Loja</th>
-              <th>Mês</th>
-              <th>R0</th>
-              <th>R1</th>
-              <th>R2</th>
-              <th>R3</th>
-              <th>R4</th>
-              <th>R5</th>
-              <th>R150</th>
-              <th>R100</th>
-              <th>R75</th>
-              <th>R50</th>
-              <th>SPF</th>
-              <th>Receita (R$)</th>
+              <th data-field="index">Nº</th>
+              <th data-field="name">Vendedor</th>
+              <th data-field="store">Loja</th>
+              <th data-field="month">Mês</th>
+              <th data-field="r0">R0</th>
+              <th data-field="r1">R1</th>
+              <th data-field="r2">R2</th>
+              <th data-field="r3">R3</th>
+              <th data-field="r4">R4</th>
+              <th data-field="r5">R5</th>
+              <th data-field="r50">R50</th>
+              <th data-field="r75">R75</th>
+              <th data-field="r100">R100</th>
+              <th data-field="r150">R150</th>
+              <th data-field="spf">SPF</th>
+              <th data-field="receita">Receita (R$)</th>
             </tr>
           </thead>
           <tbody id="sellerTableBody">
@@ -110,8 +111,13 @@ export class SellerTable {
     const sortSelect = document.getElementById('sellerSort');
     if (sortSelect) {
       sortSelect.addEventListener('change', (e) => {
-        const [field, direction] = e.target.value.split('-');
-        this.sortConfig = { field, direction };
+        const val = e.target.value;
+        if (!val) {
+          this.sortConfig = { field: '', direction: '' };
+        } else {
+          const [field, direction] = val.split('-');
+          this.sortConfig = { field, direction };
+        }
         this.renderTable();
       });
     }
@@ -150,6 +156,28 @@ export class SellerTable {
     }
 
     tbody.innerHTML = sortedRows.map((s, index) => this.createRowHtml(s, index + 1)).join('');
+
+    // --- NOVA LÓGICA DE DESTAQUE DE COLUNA (Apenas nas colunas R) ---
+    const table = tbody.closest('table');
+    if (table) {
+      // Limpa os estados anteriores
+      table.classList.remove('filtro-r-ativo');
+      table.querySelectorAll('.coluna-destaque').forEach(el => {
+        el.classList.remove('coluna-destaque');
+      });
+
+      // Pega o campo atual selecionado no sort
+      const currentField = this.sortConfig.field;
+      
+      // Só aplica o efeito de foco nas métricas de R (r0 até r150)
+      if (currentField && currentField.startsWith('r') && currentField !== 'receita') {
+        table.classList.add('filtro-r-ativo');
+        // Adiciona a classe de destaque no th e nos tds correspondentes
+        table.querySelectorAll(`th[data-field="${currentField}"], td[data-field="${currentField}"]`).forEach(el => {
+          el.classList.add('coluna-destaque');
+        });
+      }
+    }
   }
 
   collectSellerRows() {
@@ -180,6 +208,10 @@ export class SellerTable {
   sortSellerRows(rows) {
     const sorted = [...rows];
     const { field, direction } = this.sortConfig;
+    
+    // Se o filtro for vazio (Padrão), apenas retorna a lista original sem ordenar
+    if (!field) return sorted;
+
     const isDesc = direction === 'desc';
 
     const getValue = (row) => {
@@ -198,7 +230,7 @@ export class SellerTable {
         case 'receita': return Number(row.receita) || 0;
         case 'month': return Number.isFinite(row.monthOrder) ? row.monthOrder : 99;
         case 'name': return String(row.name || '');
-        default: return Number(row.receita) || 0;
+        default: return 0;
       }
     };
 
@@ -220,28 +252,28 @@ export class SellerTable {
     
     return `
       <tr>
-        <td>${rowNumber}</td>
-        <td><strong>${escapeHtml(seller.name)}</strong></td>
-        <td>
+        <td data-field="index">${rowNumber}</td>
+        <td data-field="name"><strong>${escapeHtml(seller.name)}</strong></td>
+        <td data-field="store">
           <span style="color:${d.color};font-weight:600;">
             ${escapeHtml(d.label)}
           </span>
         </td>
-        <td><strong>${escapeHtml(seller.monthLabel)}</strong></td>
-        <td class="r-cell r0">${seller.R0 || 0}</td>
-        <td class="r-cell r1">${seller.R1 || 0}</td>
-        <td class="r-cell r2">${seller.R2 || 0}</td>
-        <td class="r-cell r3">${seller.R3 || 0}</td>
-        <td class="r-cell r4">${seller.R4 || 0}</td>
-        <td class="r-cell r5">${seller.R5 || 0}</td>
-        <td class="r-cell r150">${seller.R150 || seller.RVW || 0}</td>
-        <td class="r-cell r100">${seller.R100 || 0}</td>
-        <td class="r-cell r75">${seller.R75 || 0}</td>
-        <td class="r-cell r50">${seller.R50 || 0}</td>
-        <td class="spf-cell ${Number(seller.SPF) > 0 ? 'spf-positive' : 'spf-zero'}">
+        <td data-field="month"><strong>${escapeHtml(seller.monthLabel)}</strong></td>
+        <td data-field="r0" class="r-cell r0">${seller.R0 || 0}</td>
+        <td data-field="r1" class="r-cell r1">${seller.R1 || 0}</td>
+        <td data-field="r2" class="r-cell r2">${seller.R2 || 0}</td>
+        <td data-field="r3" class="r-cell r3">${seller.R3 || 0}</td>
+        <td data-field="r4" class="r-cell r4">${seller.R4 || 0}</td>
+        <td data-field="r5" class="r-cell r5">${seller.R5 || 0}</td>
+        <td data-field="r50" class="r-cell r50">${seller.R50 || 0}</td>
+        <td data-field="r75" class="r-cell r75">${seller.R75 || 0}</td>
+        <td data-field="r100" class="r-cell r100">${seller.R100 || 0}</td>
+        <td data-field="r150" class="r-cell r150">${seller.R150 || seller.RVW || 0}</td>
+        <td data-field="spf" class="spf-cell ${Number(seller.SPF) > 0 ? 'spf-positive' : 'spf-zero'}">
           ${seller.SPF || 0}
         </td>
-        <td>${formatBRL(seller.receita)}</td>
+        <td data-field="receita">${formatBRL(seller.receita)}</td>
       </tr>
     `;
   }
