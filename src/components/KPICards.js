@@ -7,9 +7,9 @@ export class KPICards {
     this.lastData = null;
     this.cards = [
       { id: 'kpiFinanciado', icon: 'fa-money-bill-wave', label: 'Total financiado', sublabel: 'aguardando dados', formatter: formatBRL },
-      { id: 'kpiRetorno', icon: 'fa-arrow-left', label: 'Retorno total', sublabel: 'SPF incluso', formatter: formatBRL },
-      { id: 'kpiSpfPagar', icon: 'fa-hand-holding-usd', label: 'SPF a pagar', sublabel: 'comissão F&I', formatter: formatBRL },
-      { id: 'kpiRentab', icon: 'fa-chart-bar', label: 'Rentabilidade', sublabel: 'total bruta', formatter: formatBRL },
+      { id: 'kpiRetorno', icon: 'fa-arrow-left', label: 'Retorno SPF', sublabel: 'SPF incluso', formatter: formatBRL },
+      { id: 'kpiRetornoRentab', icon: 'fa-hand-holding-usd', label: 'Retorno Rentabilidade', sublabel: 'rentabilidade', formatter: formatBRL },
+      { id: 'kpiRentab', icon: 'fa-chart-bar', label: 'RETORNO TOTAL', sublabel: 'total bruta', formatter: formatBRL },
       { id: 'kpiOperacoes', icon: 'fa-shopping-cart', label: 'Operações', sublabel: 'vendas ativas', formatter: formatInteger },
       { id: 'kpiLojas', icon: 'fa-store', label: 'Lojas', sublabel: 'lojas identificadas', formatter: formatInteger }
     ];
@@ -51,7 +51,7 @@ export class KPICards {
     const mapping = {
       kpiFinanciado: totals.totalFin,
       kpiRetorno: totals.totalRet,
-      kpiSpfPagar: totals.totalSpf,
+      kpiRetornoRentab: totals.totalRetornoRentab,
       kpiRentab: totals.totalRent,
       kpiOperacoes: totals.totalOps,
       kpiLojas: data.filter(d => d.active !== false).length
@@ -64,7 +64,7 @@ export class KPICards {
   }
 
   calculateTotals(data) {
-    let totalFin = 0, totalRet = 0, totalSpf = 0, totalRent = 0, totalOps = 0;
+    let totalFin = 0, totalRet = 0, totalRetornoRentab = 0, totalRent = 0, totalOps = 0;
 
     data.forEach(dataset => {
       if (dataset.active === false) return;
@@ -75,12 +75,12 @@ export class KPICards {
         
         totalFin += seller.financiado || 0;
         totalRet += seller.retorno || 0;
-        totalSpf += seller.spfValor || 0;
+        totalRetornoRentab += seller.retornoRentab || 0;
         totalRent += seller.rentab || seller.receita || 0;
         totalOps += seller.operacoes || 0;
       });
     });
 
-    return { totalFin, totalRet, totalSpf, totalRent, totalOps };
+    return { totalFin, totalRet, totalRetornoRentab, totalRent, totalOps };
   }
 }
