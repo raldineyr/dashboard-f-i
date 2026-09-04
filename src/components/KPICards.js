@@ -6,10 +6,10 @@ export class KPICards {
     this.activeSellers = new Set();
     this.lastData = null;
     this.cards = [
-      { id: 'kpiFinanciado', icon: 'fa-money-bill-wave', label: 'Total financiado', sublabel: 'aguardando dados', formatter: formatBRL },
-      { id: 'kpiRetorno', icon: 'fa-arrow-left', label: 'Retorno SPF', sublabel: 'SPF incluso', formatter: formatBRL },
-      { id: 'kpiRetornoRentab', icon: 'fa-hand-holding-usd', label: 'Retorno Rentabilidade', sublabel: 'rentabilidade', formatter: formatBRL },
-      { id: 'kpiRentab', icon: 'fa-chart-bar', label: 'RETORNO TOTAL', sublabel: 'total bruta', formatter: formatBRL },
+      { id: 'kpiFinanciado', icon: 'fa-money-bill-wave', label: 'Total financiado', sublabel: 'Financiamento', formatter: formatBRL },
+      { id: 'kpiRentab', icon: 'fa-chart-bar', label: 'Rentabilidade Total', sublabel: 'Total bruto', formatter: formatBRL },
+      { id: 'kpiRetornoRentab', icon: 'fa-hand-holding-usd', label: 'Rentabilidade Retorno', sublabel: 'R[1..5]', formatter: formatBRL },
+      { id: 'kpiRetorno', icon: 'fa-arrow-left', label: 'Rentabilidade SPF', sublabel: 'SPF', formatter: formatBRL },
       { id: 'kpiOperacoes', icon: 'fa-shopping-cart', label: 'Operações', sublabel: 'vendas ativas', formatter: formatInteger },
       { id: 'kpiLojas', icon: 'fa-store', label: 'Lojas', sublabel: 'lojas identificadas', formatter: formatInteger }
     ];
