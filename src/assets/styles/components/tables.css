@@ -195,6 +195,8 @@ tbody tr:last-child td {
   background: var(--bg-card);
 }
 
+
+
 .seller-sort-control label {
   color: var(--color-text-muted);
   font-size: var(--font-size-md);
@@ -222,6 +224,85 @@ tbody tr:last-child td {
 .seller-sort-control select:focus {
   border-color: var(--border-hover);
   box-shadow: var(--shadow-focus);
+}
+
+/* ============================================================
+   BOTÃO LIMPAR — CONTROLE DA TABELA DE VENDEDORES
+   ============================================================ */
+
+.seller-sort-reset {
+  appearance: none;
+  -webkit-appearance: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  height: 36px;
+  min-width: 92px;
+  padding: 0 14px;
+
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius-sm);
+
+  background: var(--bg-white);
+  color: var(--color-text-secondary);
+
+  font-family: inherit;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+
+  cursor: pointer;
+  user-select: none;
+
+  outline: none;
+
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.seller-sort-reset i {
+  font-size: 13px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.seller-sort-reset span {
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Hover */
+.seller-sort-reset:hover {
+  background: var(--bg-card);
+  border-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+/* Clique */
+.seller-sort-reset:active {
+  transform: translateY(1px);
+}
+
+/* Foco */
+.seller-sort-reset:focus,
+.seller-sort-reset:focus-visible {
+  outline: none;
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Estado desabilitado */
+.seller-sort-reset:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* =========================================================

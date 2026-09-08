@@ -323,13 +323,15 @@ export class ChartManager {
         backgroundColor: isCircular ? 'rgba(0, 0, 0, 0.58)' : 'rgba(255, 255, 255, 0.90)',
         borderRadius: 4,
         padding: isCircular ? 4 : 3,
+        // Alinhamento do texto para as linhas (centralizado)
+        textAlign: 'center',
         font: { size: 9, weight: '700' },
         anchor: this.getDataLabelAnchor(type),
         align: this.getDataLabelAlign(type),
         offset: this.getDataLabelOffset(type),
         clamp: true,
         clip: false,
-        formatter: value => this.formatInteger(value)
+        formatter: (value, context) => this.formatWithPercentage(value, context, false)
       };
     }
 
@@ -343,13 +345,14 @@ export class ChartManager {
         backgroundColor: 'rgba(0, 0, 0, 0.58)',
         borderRadius: 4,
         padding: 4,
+        textAlign: 'center',
         font: { size: 10, weight: '700' },
         anchor: isCircular ? 'center' : 'end',
         align: isCircular ? 'center' : 'top',
         offset: isCircular ? 0 : 4,
         clamp: true,
         clip: false,
-        formatter: value => this.formatBRL(value)
+        formatter: (value, context) => this.formatWithPercentage(value, context, true)
       };
     }
 
@@ -363,13 +366,14 @@ export class ChartManager {
         backgroundColor: 'rgba(0, 0, 0, 0.58)',
         borderRadius: 4,
         padding: 4,
+        textAlign: 'center',
         font: { size: 10, weight: '700' },
         anchor: isCircular ? 'center' : 'end',
         align: isCircular ? 'center' : 'top',
         offset: isCircular ? 0 : 4,
         clamp: true,
         clip: false,
-        formatter: value => this.formatInteger(value)
+        formatter: (value, context) => this.formatWithPercentage(value, context, false)
       };
     }
 
@@ -388,13 +392,14 @@ export class ChartManager {
         backgroundColor: isCircular ? 'rgba(0, 0, 0, 0.58)' : 'rgba(255, 255, 255, 0.90)',
         borderRadius: 4,
         padding: isCircular ? 4 : 3,
+        textAlign: 'center',
         font: { size: 9, weight: '700' },
         anchor: this.getDataLabelAnchor(type),
         align: this.getDataLabelAlign(type),
         offset: this.getDataLabelOffset(type),
         clamp: true,
         clip: false,
-        formatter: value => this.formatInteger(value)
+        formatter: (value, context) => this.formatWithPercentage(value, context, false)
       };
     }
 
@@ -413,13 +418,14 @@ export class ChartManager {
       backgroundColor: isCircular ? 'rgba(0, 0, 0, 0.58)' : 'rgba(255, 255, 255, 0.90)',
       borderRadius: 4,
       padding: isCircular ? 4 : 3,
+      textAlign: 'center',
       font: context => this.getResponsiveDataLabelFont(context),
       anchor: this.getDataLabelAnchor(type),
       align: this.getDataLabelAlign(type),
       offset: this.getDataLabelOffset(type),
       clamp: true,
       clip: false,
-      formatter: value => this.formatBRL(value)
+      formatter: (value, context) => this.formatWithPercentage(value, context, true)
     };
   }
 
@@ -593,11 +599,11 @@ export class ChartManager {
     });
 
     this.setCircularChartData(
-      'retornoSpf',
-      ['Retorno SPF', 'Retorno Rentabilidade'],
-      [totalRetorno, totalRetornoRentab],
-      [this.pieColors[1], this.pieColors[2]]
-    );
+  'retornoSpf',
+  ['Retorno SPF', 'Retorno Rentabilidade'],
+  [totalRetorno, totalRetornoRentab],
+  ['#16A34A', '#2563EB']
+);
   }
 
   updateBancoChart(data) {
@@ -829,6 +835,28 @@ export class ChartManager {
 
   normalizeName(value) {
     return String(value ?? '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  // Método atualizado: retorna array de strings para múltiplas linhas
+  formatWithPercentage(value, context, isCurrency) {
+    const numValue = Number(value) || 0;
+    
+    // Obtém o total do dataset atual para cálculo
+    let total = 0;
+    if (context.dataset && context.dataset.data) {
+      total = context.dataset.data.reduce((acc, val) => acc + (Number(val) || 0), 0);
+    }
+
+    const formattedValue = isCurrency ? this.formatBRL(numValue) : this.formatInteger(numValue);
+    
+    // Retorna array para quebra de linha: Porcentagem na primeira, valor na segunda
+    if (total === 0) return [formattedValue];
+    
+    const percent = (numValue / total) * 100;
+    const formattedPercent = `${percent.toFixed(1).replace('.', ',')}%`;
+    
+    // Retornando array força o plugin a colocar os textos em linhas diferentes
+    return [formattedPercent, formattedValue];
   }
 
   formatInteger(value) {
