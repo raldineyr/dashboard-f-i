@@ -41,6 +41,7 @@ export class ComparisonSection {
             <i class="fas fa-chart-line"></i>
             Comparativos
           </h3>
+
           <div class="comparison-controls">
             <select
               class="comparison-mode-select"
@@ -53,6 +54,7 @@ export class ComparisonSection {
             </select>
           </div>
         </div>
+
         <div id="comparisonContent" class="comparison-content">
           <div class="comparison-empty">
             Carregue os dados para realizar uma comparação.
@@ -70,37 +72,44 @@ export class ComparisonSection {
     if (!this.eventBus) return;
 
     this.eventBus.on('data:updated', (data) => {
-        this.currentData = Array.isArray(data) ? data : [];
-        this.renderComparison();
+      this.currentData = Array.isArray(data) ? data : [];
+      this.renderComparison();
     });
 
     this.eventBus.on('data:cleared', () => {
-        this.currentData = [];
-        this.selectedStore = '';
-        this.selectedStoreA = '';
-        this.selectedMonthA = '';
-        this.selectedStoreB = '';
-        this.selectedMonthB = '';
-        this.selectedSellerA = '';
-        this.selectedSellerMonthA = '';
-        this.selectedSellerB = '';
-        this.selectedSellerMonthB = '';
-        this.renderComparison();
+      this.currentData = [];
+
+      this.selectedStore = '';
+
+      this.selectedStoreA = '';
+      this.selectedMonthA = '';
+
+      this.selectedStoreB = '';
+      this.selectedMonthB = '';
+
+      this.selectedSellerA = '';
+      this.selectedSellerMonthA = '';
+
+      this.selectedSellerB = '';
+      this.selectedSellerMonthB = '';
+
+      this.renderComparison();
     });
   }
 
   setupControls() {
     const modeSelect = document.getElementById('comparisonMode');
+
     if (!modeSelect) return;
 
     modeSelect.value = this.comparisonMode;
+
     modeSelect.addEventListener('change', (event) => {
-        this.comparisonMode = event.target.value || 'automatic';
-        this.renderComparison();
+      this.comparisonMode = event.target.value || 'automatic';
+      this.renderComparison();
     });
   }
 
-  // ESSA FUNÇÃO ESTAVA FALTANDO PARA O APP.JS NÃO QUEBRAR
   update(data) {
     this.currentData = Array.isArray(data) ? data : [];
     this.renderComparison();
@@ -108,14 +117,23 @@ export class ComparisonSection {
 
   getStoreKey(data) {
     if (!data) return '';
-    return data.storeKey || normalizeKey(`${data.brand || ''} ${data.name || ''}`);
+
+    return (
+      data.storeKey ||
+      normalizeKey(`${data.brand || ''} ${data.name || ''}`)
+    );
   }
 
   getStoreLabel(data) {
     if (!data) return '';
+
     const brand = String(data.brand || '').trim();
     const name = String(data.name || '').trim();
-    if (brand && name) return `${brand} • ${name}`;
+
+    if (brand && name) {
+      return `${brand} • ${name}`;
+    }
+
     return name || brand || 'Loja';
   }
 
@@ -132,27 +150,45 @@ export class ComparisonSection {
     const comparado = Number(valueComparado) || 0;
 
     if (base === 0 && comparado === 0) {
-      return { text: '0,0%', className: 'variation-neutral' };
+      return {
+        text: '0,0%',
+        className: 'variation-neutral'
+      };
     }
 
     if (base === 0 && comparado > 0) {
-      return { text: '+100,0%', className: 'variation-positive' };
+      return {
+        text: '+100,0%',
+        className: 'variation-positive'
+      };
     }
 
     if (base === 0 && comparado < 0) {
-      return { text: '-100,0%', className: 'variation-negative' };
+      return {
+        text: '-100,0%',
+        className: 'variation-negative'
+      };
     }
 
     if (comparado === 0) {
       if (base > 0) {
-        return { text: '-100,0%', className: 'variation-negative' };
+        return {
+          text: '-100,0%',
+          className: 'variation-negative'
+        };
       }
+
       if (base < 0) {
-        return { text: '+100,0%', className: 'variation-positive' };
+        return {
+          text: '+100,0%',
+          className: 'variation-positive'
+        };
       }
     }
 
-    const percentage = ((comparado - base) / Math.abs(base)) * 100;
+    const percentage =
+      ((comparado - base) / Math.abs(base)) * 100;
+
     let className = 'variation-neutral';
 
     if (percentage > 0.05) {
@@ -162,87 +198,119 @@ export class ComparisonSection {
     }
 
     const sign = percentage > 0 ? '+' : '';
-    const text = `${sign}${percentage.toFixed(1).replace('.', ',')}%`;
 
-    return { text, className };
+    const text =
+      `${sign}${percentage.toFixed(1).replace('.', ',')}%`;
+
+    return {
+      text,
+      className
+    };
   }
 
   getComparisonStores() {
     const map = new Map();
 
     this.currentData.forEach((data) => {
-        if (!data || data.active === false) return;
-        const key = this.getStoreKey(data);
-        if (!key) return;
+      if (!data || data.active === false) return;
 
-        if (!map.has(key)) {
-          map.set(key, {
-              key,
-              label: this.getStoreLabel(data),
-              months: []
-          });
-        }
-        map.get(key).months.push(data);
+      const key = this.getStoreKey(data);
+
+      if (!key) return;
+
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          label: this.getStoreLabel(data),
+          months: []
+        });
+      }
+
+      map.get(key).months.push(data);
     });
 
     const result = Array.from(map.values());
 
     result.forEach((store) => {
-        store.months.sort((a, b) => {
-            const monthA = Number(a.monthOrder || 99);
-            const monthB = Number(b.monthOrder || 99);
-            if (monthA !== monthB) return monthA - monthB;
-            return String(a.sourceFile || '').localeCompare(String(b.sourceFile || ''), 'pt-BR');
-        });
+      store.months.sort((a, b) => {
+        const monthA = Number(a.monthOrder || 99);
+        const monthB = Number(b.monthOrder || 99);
+
+        if (monthA !== monthB) {
+          return monthA - monthB;
+        }
+
+        return String(a.sourceFile || '')
+          .localeCompare(
+            String(b.sourceFile || ''),
+            'pt-BR'
+          );
+      });
     });
 
-    return result.sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+    return result.sort((a, b) =>
+      a.label.localeCompare(b.label, 'pt-BR')
+    );
   }
 
   getComparisonSellers() {
     const sellerMap = new Map();
 
     this.currentData.forEach((data) => {
-        if (!data || data.active === false) return;
-        const sellers = Array.isArray(data.sellers) ? data.sellers : [];
+      if (!data || data.active === false) return;
 
-        sellers.forEach((seller) => {
-            if (!seller || !seller.name) return;
-            const sellerKey = this.getSellerKey(seller.name);
+      const sellers = Array.isArray(data.sellers)
+        ? data.sellers
+        : [];
 
-            if (!sellerMap.has(sellerKey)) {
-              sellerMap.set(sellerKey, {
-                  key: sellerKey,
-                  label: this.getSellerLabel(seller.name),
-                  records: []
-              });
-            }
+      sellers.forEach((seller) => {
+        if (!seller || !seller.name) return;
 
-            sellerMap.get(sellerKey).records.push({
-                seller,
-                data,
-                storeKey: this.getStoreKey(data),
-                storeLabel: this.getStoreLabel(data),
-                monthLabel: data.monthLabel || 'Mês não identificado',
-                monthOrder: Number(data.monthOrder || 99)
-            });
+        const sellerKey = this.getSellerKey(seller.name);
+
+        if (!sellerMap.has(sellerKey)) {
+          sellerMap.set(sellerKey, {
+            key: sellerKey,
+            label: this.getSellerLabel(seller.name),
+            records: []
+          });
+        }
+
+        sellerMap.get(sellerKey).records.push({
+          seller,
+          data,
+          storeKey: this.getStoreKey(data),
+          storeLabel: this.getStoreLabel(data),
+          monthLabel: data.monthLabel || 'Mês não identificado',
+          monthOrder: Number(data.monthOrder || 99)
         });
+      });
     });
 
     const sellers = Array.from(sellerMap.values());
 
     sellers.forEach((seller) => {
-        seller.records.sort((a, b) => {
-            if (a.monthOrder !== b.monthOrder) return a.monthOrder - b.monthOrder;
-            return a.storeLabel.localeCompare(b.storeLabel, 'pt-BR');
-        });
+      seller.records.sort((a, b) => {
+        if (a.monthOrder !== b.monthOrder) {
+          return a.monthOrder - b.monthOrder;
+        }
+
+        return a.storeLabel.localeCompare(
+          b.storeLabel,
+          'pt-BR'
+        );
+      });
     });
 
-    return sellers.sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+    return sellers.sort((a, b) =>
+      a.label.localeCompare(b.label, 'pt-BR')
+    );
   }
 
   renderComparison() {
-    const content = document.getElementById('comparisonContent');
+    const content =
+      document.getElementById('comparisonContent');
+
     if (!content) return;
 
     if (!this.currentData || this.currentData.length === 0) {
@@ -251,6 +319,7 @@ export class ComparisonSection {
           Carregue os dados para realizar uma comparação.
         </div>
       `;
+
       return;
     }
 
@@ -269,7 +338,10 @@ export class ComparisonSection {
 
   renderAutomaticComparison(content) {
     const stores = this.getComparisonStores();
-    const validStores = stores.filter(store => store.months.length >= 2);
+
+    const validStores = stores.filter(
+      store => store.months.length >= 2
+    );
 
     if (!this.selectedStore) {
       if (validStores.length > 0) {
@@ -277,31 +349,53 @@ export class ComparisonSection {
       }
     }
 
-    if (this.selectedStore && !stores.some(store => store.key === this.selectedStore)) {
+    if (
+      this.selectedStore &&
+      !stores.some(
+        store => store.key === this.selectedStore
+      )
+    ) {
       this.selectedStore = '';
     }
 
-    const selected = stores.find(store => store.key === this.selectedStore);
+    const selected = stores.find(
+      store => store.key === this.selectedStore
+    );
 
-    const storeOptions = stores.map(store => `
-          <option value="${escapeHtml(store.key)}" ${store.key === this.selectedStore ? 'selected' : ''}>
-            ${escapeHtml(store.label)}
-          </option>
-    `).join('');
+    const storeOptions = stores
+      .map(store => `
+        <option
+          value="${escapeHtml(store.key)}"
+          ${store.key === this.selectedStore ? 'selected' : ''}
+        >
+          ${escapeHtml(store.label)}
+        </option>
+      `)
+      .join('');
 
     if (!selected) {
       content.innerHTML = `
         <div class="comparison-controls comparison-inline-controls">
-          <select class="comparison-store-select" id="comparisonStore" aria-label="Loja para comparação">
-            <option value="">Selecione uma loja</option>
+          <select
+            class="comparison-store-select"
+            id="comparisonStore"
+            aria-label="Loja para comparação"
+          >
+            <option value="">
+              Selecione uma loja
+            </option>
+
             ${storeOptions}
           </select>
         </div>
+
         <div class="comparison-empty">
           Selecione uma loja com pelo menos dois meses carregados.
         </div>
       `;
+
       this.bindAutomaticControls();
+
       return;
     }
 
@@ -309,11 +403,19 @@ export class ComparisonSection {
 
     content.innerHTML = `
       <div class="comparison-controls comparison-inline-controls">
-        <select class="comparison-store-select" id="comparisonStore" aria-label="Loja para comparação">
+        <select
+          class="comparison-store-select"
+          id="comparisonStore"
+          aria-label="Loja para comparação"
+        >
           ${storeOptions}
         </select>
       </div>
-      ${this.buildMonthTable(selected.label, months)}
+
+      ${this.buildMonthTable(
+        selected.label,
+        months
+      )}
     `;
 
     this.bindAutomaticControls();
@@ -325,9 +427,11 @@ export class ComparisonSection {
     if (stores.length < 2) {
       content.innerHTML = `
         <div class="comparison-empty">
-          É necessário carregar pelo menos duas lojas para realizar este comparativo.
+          É necessário carregar pelo menos duas lojas
+          para realizar este comparativo.
         </div>
       `;
+
       return;
     }
 
@@ -336,11 +440,19 @@ export class ComparisonSection {
     }
 
     if (!this.selectedStoreB) {
-      this.selectedStoreB = stores.find(store => store.key !== this.selectedStoreA)?.key || stores[0].key;
+      this.selectedStoreB =
+        stores.find(
+          store => store.key !== this.selectedStoreA
+        )?.key || stores[0].key;
     }
 
-    const storeA = stores.find(store => store.key === this.selectedStoreA);
-    const storeB = stores.find(store => store.key === this.selectedStoreB);
+    const storeA = stores.find(
+      store => store.key === this.selectedStoreA
+    );
+
+    const storeB = stores.find(
+      store => store.key === this.selectedStoreB
+    );
 
     if (!storeA || !storeB) {
       content.innerHTML = `
@@ -348,6 +460,7 @@ export class ComparisonSection {
           Selecione duas lojas diferentes.
         </div>
       `;
+
       return;
     }
 
@@ -355,48 +468,96 @@ export class ComparisonSection {
     const monthsB = storeB.months;
 
     if (!this.selectedMonthA) {
-      this.selectedMonthA = monthsA[0]?.monthLabel || '';
+      this.selectedMonthA =
+        monthsA[0]?.monthLabel || '';
     }
 
     if (!this.selectedMonthB) {
-      this.selectedMonthB = monthsB[0]?.monthLabel || '';
+      this.selectedMonthB =
+        monthsB[0]?.monthLabel || '';
     }
 
-    const dataA = this.findMonthRecord(monthsA, this.selectedMonthA);
-    const dataB = this.findMonthRecord(monthsB, this.selectedMonthB);
+    const dataA = this.findMonthRecord(
+      monthsA,
+      this.selectedMonthA
+    );
+
+    const dataB = this.findMonthRecord(
+      monthsB,
+      this.selectedMonthB
+    );
 
     content.innerHTML = `
       <div class="seller-comparison-controls">
+
         <div class="comparison-field">
           <label>Loja A</label>
-          <select class="comparison-select" id="comparisonStoreA">
-            ${this.buildStoreOptions(stores, this.selectedStoreA)}
+
+          <select
+            class="comparison-select"
+            id="comparisonStoreA"
+          >
+            ${this.buildStoreOptions(
+              stores,
+              this.selectedStoreA
+            )}
           </select>
         </div>
+
         <div class="comparison-field">
           <label>Mês A</label>
-          <select class="comparison-select" id="comparisonMonthA">
-            ${this.buildMonthOptions(monthsA, this.selectedMonthA)}
+
+          <select
+            class="comparison-select"
+            id="comparisonMonthA"
+          >
+            ${this.buildMonthOptions(
+              monthsA,
+              this.selectedMonthA
+            )}
           </select>
         </div>
-        <div class="comparison-versus">×</div>
+
+        <div class="comparison-versus">
+          ×
+        </div>
+
         <div class="comparison-field">
           <label>Loja B</label>
-          <select class="comparison-select" id="comparisonStoreB">
-            ${this.buildStoreOptions(stores, this.selectedStoreB)}
+
+          <select
+            class="comparison-select"
+            id="comparisonStoreB"
+          >
+            ${this.buildStoreOptions(
+              stores,
+              this.selectedStoreB
+            )}
           </select>
         </div>
+
         <div class="comparison-field">
           <label>Mês B</label>
-          <select class="comparison-select" id="comparisonMonthB">
-            ${this.buildMonthOptions(monthsB, this.selectedMonthB)}
+
+          <select
+            class="comparison-select"
+            id="comparisonMonthB"
+          >
+            ${this.buildMonthOptions(
+              monthsB,
+              this.selectedMonthB
+            )}
           </select>
         </div>
+
       </div>
 
       ${
         dataA && dataB
-          ? this.buildStoreVsStoreTable(dataA, dataB)
+          ? this.buildStoreVsStoreTable(
+              dataA,
+              dataB
+            )
           : `
             <div class="comparison-empty">
               Selecione os meses para comparar.
@@ -414,9 +575,11 @@ export class ComparisonSection {
     if (sellers.length < 2) {
       content.innerHTML = `
         <div class="comparison-empty">
-          É necessário ter pelo menos dois vendedores carregados para realizar o comparativo.
+          É necessário ter pelo menos dois vendedores
+          carregados para realizar o comparativo.
         </div>
       `;
+
       return;
     }
 
@@ -425,11 +588,19 @@ export class ComparisonSection {
     }
 
     if (!this.selectedSellerB) {
-      this.selectedSellerB = sellers.find(seller => seller.key !== this.selectedSellerA)?.key || sellers[0].key;
+      this.selectedSellerB =
+        sellers.find(
+          seller => seller.key !== this.selectedSellerA
+        )?.key || sellers[0].key;
     }
 
-    const sellerA = sellers.find(seller => seller.key === this.selectedSellerA);
-    const sellerB = sellers.find(seller => seller.key === this.selectedSellerB);
+    const sellerA = sellers.find(
+      seller => seller.key === this.selectedSellerA
+    );
+
+    const sellerB = sellers.find(
+      seller => seller.key === this.selectedSellerB
+    );
 
     if (!sellerA || !sellerB) {
       content.innerHTML = `
@@ -437,55 +608,109 @@ export class ComparisonSection {
           Selecione dois vendedores.
         </div>
       `;
+
       return;
     }
 
     if (!this.selectedSellerMonthA) {
-      this.selectedSellerMonthA = this.getRecordLabel(sellerA.records[0]);
+      this.selectedSellerMonthA =
+        this.getRecordLabel(
+          sellerA.records[0]
+        );
     }
 
     if (!this.selectedSellerMonthB) {
-      this.selectedSellerMonthB = this.getRecordLabel(sellerB.records[0]);
+      this.selectedSellerMonthB =
+        this.getRecordLabel(
+          sellerB.records[0]
+        );
     }
 
-    const recordA = this.findSellerRecord(sellerA.records, this.selectedSellerMonthA);
-    const recordB = this.findSellerRecord(sellerB.records, this.selectedSellerMonthB);
+    const recordA = this.findSellerRecord(
+      sellerA.records,
+      this.selectedSellerMonthA
+    );
+
+    const recordB = this.findSellerRecord(
+      sellerB.records,
+      this.selectedSellerMonthB
+    );
 
     content.innerHTML = `
       <div class="seller-comparison-controls">
+
         <div class="comparison-field">
           <label>Vendedor A</label>
-          <select class="comparison-select" id="comparisonSellerA">
-            ${this.buildSellerOptions(sellers, this.selectedSellerA)}
+
+          <select
+            class="comparison-select"
+            id="comparisonSellerA"
+          >
+            ${this.buildSellerOptions(
+              sellers,
+              this.selectedSellerA
+            )}
           </select>
         </div>
+
         <div class="comparison-field">
           <label>Mês A</label>
-          <select class="comparison-select" id="comparisonSellerMonthA">
-            ${this.buildSellerRecordOptions(sellerA.records, this.selectedSellerMonthA)}
+
+          <select
+            class="comparison-select"
+            id="comparisonSellerMonthA"
+          >
+            ${this.buildSellerRecordOptions(
+              sellerA.records,
+              this.selectedSellerMonthA
+            )}
           </select>
         </div>
-        <div class="comparison-versus">×</div>
+
+        <div class="comparison-versus">
+          ×
+        </div>
+
         <div class="comparison-field">
           <label>Vendedor B</label>
-          <select class="comparison-select" id="comparisonSellerB">
-            ${this.buildSellerOptions(sellers, this.selectedSellerB)}
+
+          <select
+            class="comparison-select"
+            id="comparisonSellerB"
+          >
+            ${this.buildSellerOptions(
+              sellers,
+              this.selectedSellerB
+            )}
           </select>
         </div>
+
         <div class="comparison-field">
           <label>Mês B</label>
-          <select class="comparison-select" id="comparisonSellerMonthB">
-            ${this.buildSellerRecordOptions(sellerB.records, this.selectedSellerMonthB)}
+
+          <select
+            class="comparison-select"
+            id="comparisonSellerMonthB"
+          >
+            ${this.buildSellerRecordOptions(
+              sellerB.records,
+              this.selectedSellerMonthB
+            )}
           </select>
         </div>
+
       </div>
 
       ${
         recordA && recordB
-          ? this.buildSellerComparisonTable(recordA, recordB)
+          ? this.buildSellerComparisonTable(
+              recordA,
+              recordB
+            )
           : `
             <div class="comparison-empty">
-              Selecione os vendedores e meses para realizar a comparação.
+              Selecione os vendedores e meses
+              para realizar a comparação.
             </div>
           `
       }
@@ -498,343 +723,820 @@ export class ComparisonSection {
     const sellerA = recordA.seller;
     const sellerB = recordB.seller;
 
-    const nameA = `${this.getSellerLabel(sellerA.name)} • ${recordA.storeLabel.replace(/^[^•]+•\s*/, '')}`;
-    const nameB = `${this.getSellerLabel(sellerB.name)} • ${recordB.storeLabel.replace(/^[^•]+•\s*/, '')}`;
+    const nameA =
+      `${this.getSellerLabel(sellerA.name)} • ` +
+      `${recordA.storeLabel.replace(/^[^•]+•\s*/, '')}`;
+
+    const nameB =
+      `${this.getSellerLabel(sellerB.name)} • ` +
+      `${recordB.storeLabel.replace(/^[^•]+•\s*/, '')}`;
 
     const indicators = [
-      { label: 'Receita', key: 'receita', currency: true },
-      { label: 'Rentabilidade SPF', key: 'retorno', currency: true },
-      { label: 'Rentabilidade Retorno', key: 'retornoRentab', currency: true },
-      { label: 'R0', key: 'R0', currency: false },
-      { label: 'R1', key: 'R1', currency: false },
-      { label: 'R2', key: 'R2', currency: false },
-      { label: 'R3', key: 'R3', currency: false },
-      { label: 'R4', key: 'R4', currency: false },
-      { label: 'R5', key: 'R5', currency: false },
-      { label: 'R50', key: 'R50', currency: false },
-      { label: 'R75', key: 'R75', currency: false },
-      { label: 'R100', key: 'R100', currency: false },
-      { label: 'R150', key: 'R150', currency: false }
+      {
+        label: 'Receita',
+        key: 'receita',
+        currency: true
+      },
+      {
+        label: 'Rentabilidade SPF',
+        key: 'retorno',
+        currency: true
+      },
+      {
+        label: 'Rentabilidade Retorno',
+        key: 'retornoRentab',
+        currency: true
+      },
+      {
+        label: 'R0',
+        key: 'R0',
+        currency: false
+      },
+      {
+        label: 'R1',
+        key: 'R1',
+        currency: false
+      },
+      {
+        label: 'R2',
+        key: 'R2',
+        currency: false
+      },
+      {
+        label: 'R3',
+        key: 'R3',
+        currency: false
+      },
+      {
+        label: 'R4',
+        key: 'R4',
+        currency: false
+      },
+      {
+        label: 'R5',
+        key: 'R5',
+        currency: false
+      },
+      {
+        label: 'R50',
+        key: 'R50',
+        currency: false
+      },
+      {
+        label: 'R75',
+        key: 'R75',
+        currency: false
+      },
+      {
+        label: 'R100',
+        key: 'R100',
+        currency: false
+      },
+      {
+        label: 'R150',
+        key: 'R150',
+        currency: false
+      }
     ];
-    
-    const rows = indicators.map(indicator => {
-          const valueA = Number(sellerA[indicator.key]) || 0;
-          const valueB = Number(sellerB[indicator.key]) || 0;
 
-          const variationA = this.calculateVariationBetween(valueB, valueA);
-          const variationB = this.calculateVariationBetween(valueA, valueB);
+    const rows = indicators
+      .map(indicator => {
+        const valueA =
+          Number(sellerA[indicator.key]) || 0;
 
-          const formattedA = indicator.currency ? formatBRL(valueA) : formatInteger(valueA);
-          const formattedB = indicator.currency ? formatBRL(valueB) : formatInteger(valueB);
+        const valueB =
+          Number(sellerB[indicator.key]) || 0;
 
-          return `
-            <tr>
-              <td><strong>${escapeHtml(indicator.label)}</strong></td>
-              <td>
-                ${formattedA}
-                ${
-                  variationA.text && variationA.text !== '—'
-                    ? `<span class="comparison-inline-variation ${variationA.className}">${variationA.text}</span>`
-                    : ''
-                }
-              </td>
-              <td>
-                ${formattedB}
-                ${
-                  variationB.text && variationB.text !== '—'
-                    ? `<span class="comparison-inline-variation ${variationB.className}">${variationB.text}</span>`
-                    : ''
-                }
-              </td>
-            </tr>
-          `;
-        }
-      ).join('');
+        const variationA =
+          this.calculateVariationBetween(
+            valueB,
+            valueA
+          );
+
+        const variationB =
+          this.calculateVariationBetween(
+            valueA,
+            valueB
+          );
+
+        const formattedA =
+          indicator.currency
+            ? formatBRL(valueA)
+            : formatInteger(valueA);
+
+        const formattedB =
+          indicator.currency
+            ? formatBRL(valueB)
+            : formatInteger(valueB);
+
+        return `
+          <tr>
+
+            <td>
+              <strong>
+                ${escapeHtml(indicator.label)}
+              </strong>
+            </td>
+
+            <td>
+              ${formattedA}
+
+              ${
+                variationA.text &&
+                variationA.text !== '—'
+                  ? `
+                    <span
+                      class="comparison-inline-variation ${variationA.className}"
+                    >
+                      ${variationA.text}
+                    </span>
+                  `
+                  : ''
+              }
+            </td>
+
+            <td>
+              ${formattedB}
+
+              ${
+                variationB.text &&
+                variationB.text !== '—'
+                  ? `
+                    <span
+                      class="comparison-inline-variation ${variationB.className}"
+                    >
+                      ${variationB.text}
+                    </span>
+                  `
+                  : ''
+              }
+            </td>
+
+          </tr>
+        `;
+      })
+      .join('');
 
     return `
       <div class="table-section comparison-table-wrapper">
+
         <table class="comparison-table">
+
           <thead>
             <tr>
-              <th>Indicador</th>
+
               <th>
-                <strong>${escapeHtml(nameA)}</strong><br>
-                <small>${escapeHtml(recordA.monthLabel)}</small>
+                Indicador
               </th>
+
               <th>
-                <strong>${escapeHtml(nameB)}</strong><br>
-                <small>${escapeHtml(recordB.monthLabel)}</small>
+                <strong>
+                  ${escapeHtml(nameA)}
+                </strong>
+                <br>
+                <small>
+                  ${escapeHtml(recordA.monthLabel)}
+                </small>
               </th>
+
+              <th>
+                <strong>
+                  ${escapeHtml(nameB)}
+                </strong>
+                <br>
+                <small>
+                  ${escapeHtml(recordB.monthLabel)}
+                </small>
+              </th>
+
             </tr>
           </thead>
+
           <tbody>
             ${rows}
           </tbody>
+
         </table>
+
       </div>
+
       <div class="comparison-note">
-        Comparação entre <strong>${escapeHtml(sellerA.name)}</strong> e <strong>${escapeHtml(sellerB.name)}</strong>.<br>
-        A variação do <strong>Vendedor A</strong> é calculada em relação ao <strong>Vendedor B</strong>.
-        A variação do <strong>Vendedor B</strong> é calculada em relação ao <strong>Vendedor A</strong>.
+        Comparação entre
+        <strong>${escapeHtml(sellerA.name)}</strong>
+        e
+        <strong>${escapeHtml(sellerB.name)}</strong>.
+        <br>
+
+        A variação do
+        <strong>Vendedor A</strong>
+        é calculada em relação ao
+        <strong>Vendedor B</strong>.
+
+        A variação do
+        <strong>Vendedor B</strong>
+        é calculada em relação ao
+        <strong>Vendedor A</strong>.
       </div>
     `;
   }
 
+  /*
+   * ============================================================
+   * INDICADORES PADRÃO DO COMPARATIVO
+   * ============================================================
+   *
+   * IMPORTANTE:
+   *
+   * Financiado
+   *      -> kpis.financiado
+   *
+   * Rentabilidade SPF
+   *      -> kpis.retorno
+   *
+   * Rentabilidade Retorno
+   *      -> kpis.retornoRentab
+   *
+   * Rentabilidade Total
+   *      -> kpis.rentab
+   *
+   * Operações
+   *      -> kpis.operacoes
+   *
+   * A nomenclatura visual é independente
+   * dos nomes internos utilizados nos dados.
+   */
+
+  getStoreComparisonIndicators() {
+    return [
+      {
+        label: 'Financiado',
+        getter: data => data.kpis?.financiado || 0,
+        currency: true
+      },
+      {
+        label: 'Rentabilidade SPF',
+        getter: data => data.kpis?.retorno || 0,
+        currency: true
+      },
+      {
+        label: 'Rentabilidade Retorno',
+        getter: data => data.kpis?.retornoRentab || 0,
+        currency: true
+      },
+      {
+        label: 'Rentabilidade Total',
+        getter: data => data.kpis?.rentab || 0,
+        currency: true
+      },
+      {
+        label: 'Operações',
+        getter: data => data.kpis?.operacoes || 0,
+        currency: false
+      }
+    ];
+  }
+
   buildMonthTable(storeLabel, months) {
-     const indicators = [
+    const indicators =
+      this.getStoreComparisonIndicators();
 
-    { label: 'Total Financiado', getter: d => d.kpis?.financiado || 0, currency: true },
-    { label: 'Rentabilidade SPF', getter: d => d.kpis?.retorno || 0, currency: true },
-    { label: 'Rentabilidade Retorno', getter: d => d.kpis?.retornoRentab || 0, currency: true },
-    { label: 'Rentabilidade Total', getter: d => d.kpis?.rentab || 0, currency: true },
-    { label: 'Operações', getter: d => d.kpis?.operacoes || 0, currency: false }
+    const headers = months
+      .map(month => `
+        <th>
+          <strong>
+            ${escapeHtml(
+              month.monthLabel || 'Mês'
+            )}
+          </strong>
 
-  ];
+          ${
+            month.sourceFile
+              ? `
+                <br>
+                <small>
+                  ${escapeHtml(
+                    String(month.sourceFile)
+                      .substring(0, 30)
+                  )}
+                </small>
+              `
+              : ''
+          }
+        </th>
+      `)
+      .join('');
 
-    const headers = months.map(month => `
-          <th>
-            <strong>${escapeHtml(month.monthLabel || 'Mês')}</strong>
-            ${month.sourceFile ? `<br><small>${escapeHtml(String(month.sourceFile).substring(0, 30))}</small>` : ''}
-          </th>
-        `).join('');
+    const body = indicators
+      .map(indicator => {
+        const values = months.map(
+          indicator.getter
+        );
 
-    const body = indicators.map(indicator => {
-          const values = months.map(indicator.getter);
+        return `
+          <tr>
 
-          return `
-            <tr>
-              <td><strong>${escapeHtml(indicator.label)}</strong></td>
-              ${values.map((value, index) => {
+            <td>
+              <strong>
+                ${escapeHtml(indicator.label)}
+              </strong>
+            </td>
+
+            ${
+              values
+                .map((value, index) => {
                   let variation = '';
+
                   if (index > 0) {
-                    const previous = Number(values[index - 1]) || 0;
-                    const result = this.calculateVariationBetween(previous, value);
-                    variation = `<br><small class="${result.className}">${escapeHtml(result.text)}</small>`;
+                    const previous =
+                      Number(
+                        values[index - 1]
+                      ) || 0;
+
+                    const result =
+                      this.calculateVariationBetween(
+                        previous,
+                        value
+                      );
+
+                    variation = `
+                      <br>
+                      <small
+                        class="${result.className}"
+                      >
+                        ${escapeHtml(
+                          result.text
+                        )}
+                      </small>
+                    `;
                   }
-                  const formatted = indicator.currency ? formatBRL(value) : formatInteger(value);
-                  return `<td>${formatted}${variation}</td>`;
-                }
-              ).join('')}
-            </tr>
-          `;
-        }
-      ).join('');
+
+                  const formatted =
+                    indicator.currency
+                      ? formatBRL(value)
+                      : formatInteger(value);
+
+                  return `
+                    <td>
+                      ${formatted}
+                      ${variation}
+                    </td>
+                  `;
+                })
+                .join('')
+            }
+
+          </tr>
+        `;
+      })
+      .join('');
 
     return `
       <div class="table-section">
+
         <table class="comparison-table">
+
           <thead>
             <tr>
-              <th>Indicador</th>
+
+              <th>
+                Indicador
+              </th>
+
               ${headers}
+
             </tr>
           </thead>
-          <tbody>${body}</tbody>
+
+          <tbody>
+            ${body}
+          </tbody>
+
         </table>
+
       </div>
+
       <div class="comparison-note">
-        <strong>${escapeHtml(storeLabel)}</strong> — ${months.length} meses comparados.
+        <strong>
+          ${escapeHtml(storeLabel)}
+        </strong>
+        — ${months.length} meses comparados.
       </div>
     `;
   }
 
   buildStoreVsStoreTable(dataA, dataB) {
-    const indicators = [
-      { label: 'Total Financiado', getter: d => d.kpis?.financiado || 0, currency: true },
-      { label: 'Rentabilidade SPF', getter: d => d.kpis?.retorno || 0, currency: true },
-      { label: 'Rentabilidade Retorno', getter: d => d.kpis?.retornoRentab || 0, currency: true },
-      { label: 'Rentabilidade Total', getter: d => d.kpis?.rentab || 0, currency: true },
-      { label: 'Operações', getter: d => d.kpis?.operacoes || 0, currency: false }
-    ];
+    const indicators =
+      this.getStoreComparisonIndicators();
 
-    const rows = indicators.map(indicator => {
-          const valueA = Number(indicator.getter(dataA)) || 0;
-          const valueB = Number(indicator.getter(dataB)) || 0;
+    const rows = indicators
+      .map(indicator => {
+        const valueA =
+          Number(indicator.getter(dataA)) || 0;
 
-          const variationA = this.calculateVariationBetween(valueB, valueA);
-          const variationB = this.calculateVariationBetween(valueA, valueB);
+        const valueB =
+          Number(indicator.getter(dataB)) || 0;
 
-          const formattedA = indicator.currency ? formatBRL(valueA) : formatInteger(valueA);
-          const formattedB = indicator.currency ? formatBRL(valueB) : formatInteger(valueB);
+        const variationA =
+          this.calculateVariationBetween(
+            valueB,
+            valueA
+          );
 
-          return `
-            <tr>
-              <td><strong>${escapeHtml(indicator.label)}</strong></td>
-              <td>
-                ${formattedA}
-                ${variationA.text && variationA.text !== '—' ? `<span class="comparison-inline-variation ${variationA.className}">${variationA.text}</span>` : ''}
-              </td>
-              <td>
-                ${formattedB}
-                ${variationB.text && variationB.text !== '—' ? `<span class="comparison-inline-variation ${variationB.className}">${variationB.text}</span>` : ''}
-              </td>
-            </tr>
-          `;
-        }
-      ).join('');
+        const variationB =
+          this.calculateVariationBetween(
+            valueA,
+            valueB
+          );
+
+        const formattedA =
+          indicator.currency
+            ? formatBRL(valueA)
+            : formatInteger(valueA);
+
+        const formattedB =
+          indicator.currency
+            ? formatBRL(valueB)
+            : formatInteger(valueB);
+
+        return `
+          <tr>
+
+            <td>
+              <strong>
+                ${escapeHtml(indicator.label)}
+              </strong>
+            </td>
+
+            <td>
+              ${formattedA}
+
+              ${
+                variationA.text &&
+                variationA.text !== '—'
+                  ? `
+                    <span
+                      class="comparison-inline-variation ${variationA.className}"
+                    >
+                      ${variationA.text}
+                    </span>
+                  `
+                  : ''
+              }
+            </td>
+
+            <td>
+              ${formattedB}
+
+              ${
+                variationB.text &&
+                variationB.text !== '—'
+                  ? `
+                    <span
+                      class="comparison-inline-variation ${variationB.className}"
+                    >
+                      ${variationB.text}
+                    </span>
+                  `
+                  : ''
+              }
+            </td>
+
+          </tr>
+        `;
+      })
+      .join('');
 
     return `
       <div class="table-section">
+
         <table class="comparison-table">
+
           <thead>
             <tr>
-              <th>Indicador</th>
+
               <th>
-                ${escapeHtml(this.getStoreLabel(dataA))}<br>
-                <small>${escapeHtml(dataA.monthLabel || '')}</small>
+                Indicador
               </th>
+
               <th>
-                ${escapeHtml(this.getStoreLabel(dataB))}<br>
-                <small>${escapeHtml(dataB.monthLabel || '')}</small>
+                ${escapeHtml(
+                  this.getStoreLabel(dataA)
+                )}
+                <br>
+
+                <small>
+                  ${escapeHtml(
+                    dataA.monthLabel || ''
+                  )}
+                </small>
               </th>
+
+              <th>
+                ${escapeHtml(
+                  this.getStoreLabel(dataB)
+                )}
+                <br>
+
+                <small>
+                  ${escapeHtml(
+                    dataB.monthLabel || ''
+                  )}
+                </small>
+              </th>
+
             </tr>
           </thead>
-          <tbody>${rows}</tbody>
+
+          <tbody>
+            ${rows}
+          </tbody>
+
         </table>
+
       </div>
+
       <div class="comparison-note">
-        A variação da <strong>Loja A</strong> é calculada em relação à <strong>Loja B</strong>.
-        A variação da <strong>Loja B</strong> é calculada em relação à <strong>Loja A</strong>.
+        A variação da
+        <strong>Loja A</strong>
+        é calculada em relação à
+        <strong>Loja B</strong>.
+
+        A variação da
+        <strong>Loja B</strong>
+        é calculada em relação à
+        <strong>Loja A</strong>.
       </div>
     `;
   }
 
   buildStoreOptions(stores, selected) {
-    return stores.map(store => `
-        <option value="${escapeHtml(store.key)}" ${store.key === selected ? 'selected' : ''}>
+    return stores
+      .map(store => `
+        <option
+          value="${escapeHtml(store.key)}"
+          ${store.key === selected ? 'selected' : ''}
+        >
           ${escapeHtml(store.label)}
         </option>
-      `).join('');
+      `)
+      .join('');
   }
 
   buildMonthOptions(months, selected) {
-    return months.map(month => {
-        const value = month.monthLabel || 'Mês';
+    return months
+      .map(month => {
+        const value =
+          month.monthLabel || 'Mês';
+
         return `
-          <option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>
+          <option
+            value="${escapeHtml(value)}"
+            ${value === selected ? 'selected' : ''}
+          >
             ${escapeHtml(value)}
           </option>
         `;
-      }).join('');
+      })
+      .join('');
   }
 
   buildSellerOptions(sellers, selected) {
-    return sellers.map(seller => `
-        <option value="${escapeHtml(seller.key)}" ${seller.key === selected ? 'selected' : ''}>
+    return sellers
+      .map(seller => `
+        <option
+          value="${escapeHtml(seller.key)}"
+          ${seller.key === selected ? 'selected' : ''}
+        >
           ${escapeHtml(seller.label)}
         </option>
-      `).join('');
+      `)
+      .join('');
   }
 
   buildSellerRecordOptions(records, selected) {
-    return records.map(record => {
-        const value = this.getRecordLabel(record);
-        const storeName = record.storeLabel || '';
-        const shortStore = storeName.replace(/^[^•]+•\s*/, '');
-        const label = `${record.monthLabel} — ${shortStore}`;
+    return records
+      .map(record => {
+        const value =
+          this.getRecordLabel(record);
+
+        const storeName =
+          record.storeLabel || '';
+
+        const shortStore =
+          storeName.replace(
+            /^[^•]+•\s*/,
+            ''
+          );
+
+        const label =
+          `${record.monthLabel} — ${shortStore}`;
 
         return `
-          <option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>
+          <option
+            value="${escapeHtml(value)}"
+            ${value === selected ? 'selected' : ''}
+          >
             ${escapeHtml(label)}
           </option>
         `;
-      }).join('');
+      })
+      .join('');
   }
 
   findMonthRecord(months, monthLabel) {
-    return months.find(month => month.monthLabel === monthLabel) || months[0] || null;
+    return (
+      months.find(
+        month => month.monthLabel === monthLabel
+      ) ||
+      months[0] ||
+      null
+    );
   }
 
   getRecordLabel(record) {
     if (!record) return '';
-    return [record.monthLabel || '', record.storeKey || ''].join('::');
+
+    return [
+      record.monthLabel || '',
+      record.storeKey || ''
+    ].join('::');
   }
 
   findSellerRecord(records, value) {
-    return records.find(record => this.getRecordLabel(record) === value) || records[0] || null;
+    return (
+      records.find(
+        record =>
+          this.getRecordLabel(record) === value
+      ) ||
+      records[0] ||
+      null
+    );
   }
 
   bindAutomaticControls() {
-    const select = document.getElementById('comparisonStore');
+    const select =
+      document.getElementById(
+        'comparisonStore'
+      );
+
     if (!select) return;
 
-    select.addEventListener('change', event => {
-        this.selectedStore = event.target.value;
+    select.addEventListener(
+      'change',
+      event => {
+        this.selectedStore =
+          event.target.value;
+
         this.renderComparison();
-    });
+      }
+    );
   }
 
   bindStoreControls() {
-    const storeA = document.getElementById('comparisonStoreA');
-    const monthA = document.getElementById('comparisonMonthA');
-    const storeB = document.getElementById('comparisonStoreB');
-    const monthB = document.getElementById('comparisonMonthB');
+    const storeA =
+      document.getElementById(
+        'comparisonStoreA'
+      );
+
+    const monthA =
+      document.getElementById(
+        'comparisonMonthA'
+      );
+
+    const storeB =
+      document.getElementById(
+        'comparisonStoreB'
+      );
+
+    const monthB =
+      document.getElementById(
+        'comparisonMonthB'
+      );
 
     if (storeA) {
-      storeA.addEventListener('change', event => {
-          this.selectedStoreA = event.target.value;
+      storeA.addEventListener(
+        'change',
+        event => {
+          this.selectedStoreA =
+            event.target.value;
+
           this.selectedMonthA = '';
+
           this.renderComparison();
-      });
+        }
+      );
     }
 
     if (monthA) {
-      monthA.addEventListener('change', event => {
-          this.selectedMonthA = event.target.value;
+      monthA.addEventListener(
+        'change',
+        event => {
+          this.selectedMonthA =
+            event.target.value;
+
           this.renderComparison();
-      });
+        }
+      );
     }
 
     if (storeB) {
-      storeB.addEventListener('change', event => {
-          this.selectedStoreB = event.target.value;
+      storeB.addEventListener(
+        'change',
+        event => {
+          this.selectedStoreB =
+            event.target.value;
+
           this.selectedMonthB = '';
+
           this.renderComparison();
-      });
+        }
+      );
     }
 
     if (monthB) {
-      monthB.addEventListener('change', event => {
-          this.selectedMonthB = event.target.value;
+      monthB.addEventListener(
+        'change',
+        event => {
+          this.selectedMonthB =
+            event.target.value;
+
           this.renderComparison();
-      });
+        }
+      );
     }
   }
 
   bindSellerControls() {
-    const sellerA = document.getElementById('comparisonSellerA');
-    const monthA = document.getElementById('comparisonSellerMonthA');
-    const sellerB = document.getElementById('comparisonSellerB');
-    const monthB = document.getElementById('comparisonSellerMonthB');
+    const sellerA =
+      document.getElementById(
+        'comparisonSellerA'
+      );
+
+    const monthA =
+      document.getElementById(
+        'comparisonSellerMonthA'
+      );
+
+    const sellerB =
+      document.getElementById(
+        'comparisonSellerB'
+      );
+
+    const monthB =
+      document.getElementById(
+        'comparisonSellerMonthB'
+      );
 
     if (sellerA) {
-      sellerA.addEventListener('change', event => {
-          this.selectedSellerA = event.target.value;
+      sellerA.addEventListener(
+        'change',
+        event => {
+          this.selectedSellerA =
+            event.target.value;
+
           this.selectedSellerMonthA = '';
+
           this.renderComparison();
-      });
+        }
+      );
     }
 
     if (monthA) {
-      monthA.addEventListener('change', event => {
-          this.selectedSellerMonthA = event.target.value;
+      monthA.addEventListener(
+        'change',
+        event => {
+          this.selectedSellerMonthA =
+            event.target.value;
+
           this.renderComparison();
-      });
+        }
+      );
     }
 
     if (sellerB) {
-      sellerB.addEventListener('change', event => {
-          this.selectedSellerB = event.target.value;
+      sellerB.addEventListener(
+        'change',
+        event => {
+          this.selectedSellerB =
+            event.target.value;
+
           this.selectedSellerMonthB = '';
+
           this.renderComparison();
-      });
+        }
+      );
     }
 
     if (monthB) {
-      monthB.addEventListener('change', event => {
-          this.selectedSellerMonthB = event.target.value;
+      monthB.addEventListener(
+        'change',
+        event => {
+          this.selectedSellerMonthB =
+            event.target.value;
+
           this.renderComparison();
-      });
+        }
+      );
     }
   }
 }
