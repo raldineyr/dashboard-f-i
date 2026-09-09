@@ -600,7 +600,7 @@ export class ChartManager {
 
     this.setCircularChartData(
   'retornoSpf',
-  ['Retorno SPF', 'Retorno Rentabilidade'],
+  ['Retorno SPF', 'Rentabilidade Retorno'],
   [totalRetorno, totalRetornoRentab],
   ['#16A34A', '#2563EB']
 );
