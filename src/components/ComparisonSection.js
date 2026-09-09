@@ -640,10 +640,10 @@ export class ComparisonSection {
 
   buildStoreVsStoreTable(dataA, dataB) {
     const indicators = [
-      { label: 'Financiado', getter: d => d.kpis?.financiado || 0, currency: true },
-      { label: 'Retorno', getter: d => d.kpis?.retorno || 0, currency: true },
-      { label: 'Retorno Rentabilidade', getter: d => d.kpis?.retornoRentab || 0, currency: true },
-      { label: 'Rentabilidade', getter: d => d.kpis?.rentab || 0, currency: true },
+      { label: 'Total Financiado', getter: d => d.kpis?.financiado || 0, currency: true },
+      { label: 'Rentabilidade SPF', getter: d => d.kpis?.retorno || 0, currency: true },
+      { label: 'Rentabilidade Retorno', getter: d => d.kpis?.retornoRentab || 0, currency: true },
+      { label: 'Rentabilidade Total', getter: d => d.kpis?.rentab || 0, currency: true },
       { label: 'Operações', getter: d => d.kpis?.operacoes || 0, currency: false }
     ];
 
