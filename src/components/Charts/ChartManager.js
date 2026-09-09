@@ -147,7 +147,7 @@ export class ChartManager {
     container.innerHTML = `
       <div class="chart-grid">
         ${this.createChartCard('vendedor', 'RENTABILIDADE POR VENDEDOR', 'fa-users')}
-        ${this.createChartCard('retornoSpf', 'RETORNO SPF VS RETORNO RENTABILIDADE', 'fa-chart-pie')}
+        ${this.createChartCard('retornoSpf', 'RENTABILIDADE SPF vs RENTABILIDADE RETORNO', 'fa-chart-pie')}
         ${this.createChartCard('banco', 'FINANCIAMENTOS POR BANCO', 'fa-university')}
         ${this.createChartCard('rType', 'COMISSÃO TIPO R', 'fa-tags')}
         ${this.createChartCard('spfGeral', 'COM SPF VS SEM SPF', 'fa-check-circle')}
