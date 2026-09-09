@@ -503,8 +503,8 @@ export class ComparisonSection {
 
     const indicators = [
       { label: 'Receita', key: 'receita', currency: true },
-      { label: 'Retorno', key: 'retorno', currency: true },
-      { label: 'Retorno Rentab.', key: 'retornoRentab', currency: true },
+      { label: 'Rentabilidade SPF', key: 'retorno', currency: true },
+      { label: 'Rentabilidade Retorno', key: 'retornoRentab', currency: true },
       { label: 'R0', key: 'R0', currency: false },
       { label: 'R1', key: 'R1', currency: false },
       { label: 'R2', key: 'R2', currency: false },
@@ -581,13 +581,15 @@ export class ComparisonSection {
   }
 
   buildMonthTable(storeLabel, months) {
-    const indicators = [
-      { label: 'Total Financiado', getter: d => d.kpis?.financiado || 0, currency: true },
-      { label: 'Rentabilidade SPF', getter: d => d.kpis?.retorno || 0, currency: true },
-      { label: 'Rentabilidade Retorno', getter: d => d.kpis?.retornoRentab || 0, currency: true },
-      { label: 'Rentabilidade Total', getter: d => d.kpis?.rentab || 0, currency: true },
-      { label: 'Operações', getter: d => d.kpis?.operacoes || 0, currency: false }
-    ];
+     const indicators = [
+
+    { label: 'Total Financiado', getter: d => d.kpis?.financiado || 0, currency: true },
+    { label: 'Rentabilidade SPF', getter: d => d.kpis?.retorno || 0, currency: true },
+    { label: 'Rentabilidade Retorno', getter: d => d.kpis?.retornoRentab || 0, currency: true },
+    { label: 'Rentabilidade Total', getter: d => d.kpis?.rentab || 0, currency: true },
+    { label: 'Operações', getter: d => d.kpis?.operacoes || 0, currency: false }
+
+  ];
 
     const headers = months.map(month => `
           <th>
