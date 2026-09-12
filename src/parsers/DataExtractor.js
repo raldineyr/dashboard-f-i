@@ -8,61 +8,59 @@ import {
   MONTH_NAMES
 } from '../utils/constants.js';
 
-import { storeConfig } from '../config/store.config.js';
-import { monthConfig } from '../config/month.config.js';
+import {
+  storeConfig
+} from '../config/store.config.js';
 
-/**
- * Extrai dados de arquivos CSV/XLSX que podem conter:
- *
- * - várias lojas no mesmo arquivo;
- * - tabela de operações;
- * - tabelas de resumo ao lado da tabela de operações;
- * - diferentes nomes para as mesmas colunas.
- *
- * Nomenclatura utilizada pelo Dashboard:
- *
- * RET. SPF
- *   -> RETORNO SPF
- *
- * RET. RENTABILIDADE
- *   -> RETORNO RENTABILIDADE
- *
- * RENTAB. TOTAL
- *   -> RENTABILIDADE TOTAL
- *
- * Identificação da MG Inglaterra:
- *
- * MG INGLATERRA
- * MG INGLATERRA SSA
- * INGLATERRA
- *
- * Todas representam:
- *
- * Nome da loja:
- *   MG INGLATERRA
- *
- * Nome curto:
- *   MG IGT
- */
+import {
+  monthConfig
+} from '../config/month.config.js';
+
+
 export class DataExtractor {
+
 
   // ==============================================================
   // EXTRAÇÃO PRINCIPAL
   // ==============================================================
 
-  static extract(rows, fileName = '') {
+  static extract(
+    rows,
+    fileName = ''
+  ) {
 
     if (
       !Array.isArray(rows) ||
       rows.length === 0
     ) {
+
       return [];
     }
 
-    const headers =
-      this.findTransactionHeaders(rows);
 
-    if (!headers.length) {
+    const headers =
+      this.findTransactionHeaders(
+        rows
+      );
+
+
+    console.groupCollapsed(
+      `[DataExtractor] ${fileName} — ${headers.length} tabela(s) de operações`
+    );
+
+
+    console.log(
+      'Cabeçalhos encontrados:',
+      headers
+    );
+
+
+    console.groupEnd();
+
+
+    if (
+      !headers.length
+    ) {
 
       console.warn(
         `[DataExtractor] Nenhum cabeçalho de transações encontrado em: ${fileName}`
@@ -71,7 +69,9 @@ export class DataExtractor {
       return [];
     }
 
+
     const result = [];
+
 
     for (
       let i = 0;
@@ -79,38 +79,64 @@ export class DataExtractor {
       i++
     ) {
 
-      const start =
-        headers[i];
-
-      const end =
-        headers[i + 1] ??
-        rows.length;
-
       const parsed =
         this.parseSection(
           rows,
-          start,
-          end,
+          headers[i],
+          headers[i + 1] ??
+            rows.length,
           fileName,
           i
         );
 
-      if (parsed) {
-        result.push(parsed);
+
+      if (
+        parsed
+      ) {
+
+        result.push(
+          parsed
+        );
       }
     }
+
 
     return result;
   }
 
 
   // ==============================================================
-  // LOCALIZA OS CABEÇALHOS DAS TRANSAÇÕES
+  // ANO
   // ==============================================================
 
-  static findTransactionHeaders(rows) {
+  static detectYear(
+    text
+  ) {
+
+    const match =
+      String(
+        text || ''
+      ).match(
+        /\b(20\d{2})\b/
+      );
+
+
+    return match
+      ? Number(match[1])
+      : 0;
+  }
+
+
+  // ==============================================================
+  // LOCALIZA CABEÇALHOS
+  // ==============================================================
+
+  static findTransactionHeaders(
+    rows
+  ) {
 
     const headers = [];
+
 
     for (
       let i = 0;
@@ -119,48 +145,80 @@ export class DataExtractor {
     ) {
 
       const row =
-        Array.isArray(rows[i])
+        Array.isArray(
+          rows[i]
+        )
           ? rows[i]
           : [];
+
 
       const values =
         row.map(
           value =>
-            this.normalizeHeader(value)
+            this.normalizeHeader(
+              value
+            )
         );
 
 
       const hasCliente =
-        values.includes('CLIENTE');
+        values.includes(
+          'CLIENTE'
+        );
 
 
       const hasBanco =
-        values.includes('BANCO');
+        values.includes(
+          'BANCO'
+        );
 
 
       const hasVendedor =
-        values.includes('VENDEDOR');
+        values.includes(
+          'VENDEDOR'
+        );
 
 
       const hasFinanciamento =
-        values.includes('FINANCIAMENTO') ||
-        values.includes('FINANCIADO') ||
-        values.includes('VALOR FINANCIADO') ||
-        values.includes('VAL. FINANCIADO');
+        values.includes(
+          'FINANCIAMENTO'
+        ) ||
+        values.includes(
+          'FINANCIADO'
+        ) ||
+        values.includes(
+          'VALOR FINANCIADO'
+        ) ||
+        values.includes(
+          'VAL. FINANCIADO'
+        ) ||
+        values.includes(
+          'VALOR FINANC.'
+        );
 
 
       const hasCpfCnpj =
-        values.includes('CPF/CNPJ') ||
-        values.includes('CPF CNPJ') ||
+        values.includes(
+          'CPF/CNPJ'
+        ) ||
+        values.includes(
+          'CPF CNPJ'
+        ) ||
         values.some(
           value =>
-            value.includes('CPF/CNPJ')
+            value.includes(
+              'CPF/CNPJ'
+            )
         );
 
 
       const hasTipo =
-        values.includes('PJ/PF') ||
-        values.includes('PJ PF');
+        values.includes(
+          'PJ/PF'
+        ) ||
+        values.includes(
+          'PJ PF'
+        );
 
 
       if (
@@ -168,19 +226,25 @@ export class DataExtractor {
         hasBanco &&
         hasVendedor &&
         hasFinanciamento &&
-        (hasCpfCnpj || hasTipo)
+        (
+          hasCpfCnpj ||
+          hasTipo
+        )
       ) {
 
-        headers.push(i);
+        headers.push(
+          i
+        );
       }
     }
+
 
     return headers;
   }
 
 
   // ==============================================================
-  // PROCESSA UMA SEÇÃO / LOJA
+  // PROCESSA UMA SEÇÃO
   // ==============================================================
 
   static parseSection(
@@ -201,13 +265,14 @@ export class DataExtractor {
     if (
       !sectionRows.length
     ) {
+
       return null;
     }
 
 
-    // ------------------------------------------------------------
-    // 1. IDENTIFICAÇÃO DA LOJA
-    // ------------------------------------------------------------
+    // ============================================================
+    // IDENTIDADE DA LOJA
+    // ============================================================
 
     const rawStoreName =
       this.findTitleBeforeHeader(
@@ -227,33 +292,41 @@ export class DataExtractor {
       );
 
 
-    /*
-     * IMPORTANTE:
-     *
-     * storeName mantém o nome oficial.
-     *
-     * Para MG INGLATERRA:
-     *
-     * rawStoreName:
-     *   MG INGLATERRA SSA
-     *
-     * storeName:
-     *   MG INGLATERRA
-     *
-     * shortName:
-     *   MG IGT
-     */
-
     const storeName =
-      this.displayStoreName(
-        rawStoreName
+      this.resolveStoreName(
+        fileName,
+        rawStoreName,
+        brand
       );
 
+
+    // ============================================================
+    // MÊS
+    // ============================================================
 
     const detectedMonth =
       monthConfig.detectMonth(
         `${fileName} ${rawStoreName}`
       );
+
+
+    const detectedYear =
+      this.detectYear(
+        `${fileName} ${rawStoreName}`
+      );
+
+
+    const monthNumber =
+      monthConfig.getMonthNumber(
+        detectedMonth
+      );
+
+
+    const periodKey =
+      detectedYear &&
+      monthNumber
+        ? `${detectedYear}-${String(monthNumber).padStart(2, '0')}`
+        : '';
 
 
     const label =
@@ -277,17 +350,16 @@ export class DataExtractor {
       );
 
 
-    // ------------------------------------------------------------
-    // 2. CABEÇALHO DA TABELA DE OPERAÇÕES
-    // ------------------------------------------------------------
-
-    const txHeader = 0;
-
+    // ============================================================
+    // CABEÇALHO
+    // ============================================================
 
     const header =
-      sectionRows[txHeader].map(
+      sectionRows[0].map(
         value =>
-          this.normalizeHeader(value)
+          this.normalizeHeader(
+            value
+          )
       );
 
 
@@ -414,9 +486,9 @@ export class DataExtractor {
       );
 
 
-    // ------------------------------------------------------------
-    // VALIDAÇÃO DA ESTRUTURA
-    // ------------------------------------------------------------
+    // ============================================================
+    // VALIDAÇÃO
+    // ============================================================
 
     if (
       idxCliente < 0 ||
@@ -426,48 +498,26 @@ export class DataExtractor {
     ) {
 
       console.warn(
-        `[DataExtractor] Estrutura de operações inválida na seção ${sectionIndex + 1} de ${fileName}`
+        `[DataExtractor] Estrutura inválida em ${fileName}, seção ${sectionIndex + 1}`
       );
 
       return null;
     }
 
 
-    // ------------------------------------------------------------
-    // 3. ACUMULADORES
-    // ------------------------------------------------------------
+    // ============================================================
+    // ACUMULADORES
+    // ============================================================
 
     let financiado = 0;
 
-    /*
-     * retorno
-     *
-     * Representa:
-     * RETORNO SPF
-     */
     let retorno = 0;
 
-
-    /*
-     * retornoRentab
-     *
-     * Representa:
-     * RETORNO RENTABILIDADE
-     */
     let retornoRentab = 0;
-
 
     let spfPagar = 0;
 
-
-    /*
-     * rentab
-     *
-     * Representa:
-     * RENTABILIDADE TOTAL
-     */
     let rentab = 0;
-
 
     let operacoes = 0;
 
@@ -506,12 +556,19 @@ export class DataExtractor {
       new Map();
 
 
-    // ------------------------------------------------------------
-    // 4. LEITURA DAS OPERAÇÕES
-    // ------------------------------------------------------------
+    // ============================================================
+    // AUDITORIA
+    // ============================================================
+
+    const auditRows = [];
+
+
+    // ============================================================
+    // OPERAÇÕES
+    // ============================================================
 
     for (
-      let i = txHeader + 1;
+      let i = 1;
       i < sectionRows.length;
       i++
     ) {
@@ -527,6 +584,7 @@ export class DataExtractor {
       if (
         !row.length
       ) {
+
         continue;
       }
 
@@ -550,7 +608,7 @@ export class DataExtractor {
 
 
       // ----------------------------------------------------------
-      // LINHAS DE TOTAL
+      // TOTAL
       // ----------------------------------------------------------
 
       if (
@@ -571,13 +629,10 @@ export class DataExtractor {
       }
 
 
-      /*
-       * Evita interpretar linhas
-       * numéricas isoladas como clientes.
-       */
-
       if (
-        /^\d+$/.test(cliente)
+        /^\d+$/.test(
+          cliente
+        )
       ) {
 
         continue;
@@ -593,9 +648,9 @@ export class DataExtractor {
       }
 
 
-      // ----------------------------------------------------------
-      // LEITURA FINANCEIRA
-      // ----------------------------------------------------------
+      // ==========================================================
+      // VALORES
+      // ==========================================================
 
       const fin =
         this.readCurrency(
@@ -625,7 +680,7 @@ export class DataExtractor {
         );
 
 
-      const spf =
+      const spfColumn =
         this.readCurrency(
           row,
           idxSpfPagar
@@ -639,9 +694,9 @@ export class DataExtractor {
         );
 
 
-      // ----------------------------------------------------------
-      // DEFINIÇÃO DO RETORNO SPF
-      // ----------------------------------------------------------
+      // ==========================================================
+      // RETORNO SPF
+      // ==========================================================
 
       let retSPFValor = 0;
 
@@ -662,55 +717,43 @@ export class DataExtractor {
       }
 
 
-      // ----------------------------------------------------------
-      // IGNORA LINHAS SEM VALORES
-      // ----------------------------------------------------------
+      // ==========================================================
+      // DESCARTA LINHA SEM DADOS FINANCEIROS
+      // ==========================================================
 
       if (
         fin <= 0 &&
         retSPFValor <= 0 &&
         retRentab <= 0 &&
         rentTotal <= 0 &&
-        spf <= 0
+        spfColumn <= 0
       ) {
 
         continue;
       }
 
 
-      // ----------------------------------------------------------
-      // KPIs
-      // ----------------------------------------------------------
+      // ==========================================================
+      // SPF A PAGAR
+      //
+      // Se existir coluna própria:
+      //     utiliza a coluna.
+      //
+      // Caso contrário:
+      //     acompanha o RETORNO SPF.
+      // ==========================================================
 
-      financiado +=
-        fin;
-
-
-      /*
-       * Rentabilidade SPF
-       */
-      retorno +=
-        retSPFValor;
-
-
-      /*
-       * Rentabilidade Retorno
-       */
-      retornoRentab +=
-        retRentab;
+      const spfPagarValor =
+        idxSpfPagar >= 0
+          ? spfColumn
+          : retSPFValor;
 
 
-      /*
-       * SPF A PAGAR
-       */
-      spfPagar +=
-        spf;
+      // ==========================================================
+      // RENTABILIDADE TOTAL
+      // ==========================================================
 
-
-      /*
-       * Rentabilidade Total
-       */
-      rentab +=
+      const rentabilidadeTotal =
         rentTotal > 0
           ? rentTotal
           : (
@@ -719,12 +762,69 @@ export class DataExtractor {
             );
 
 
+      // ==========================================================
+      // ACUMULA KPIs
+      // ==========================================================
+
+      financiado +=
+        fin;
+
+
+      retorno +=
+        retSPFValor;
+
+
+      retornoRentab +=
+        retRentab;
+
+
+      spfPagar +=
+        spfPagarValor;
+
+
+      rentab +=
+        rentabilidadeTotal;
+
+
       operacoes++;
 
 
-      // ----------------------------------------------------------
-      // BANCOS
-      // ----------------------------------------------------------
+      // ==========================================================
+      // AUDITORIA DA OPERAÇÃO
+      // ==========================================================
+
+      auditRows.push({
+
+        linha:
+          start + i + 1,
+
+        cliente,
+
+        banco,
+
+        vendedor,
+
+        financiamento:
+          fin,
+
+        retornoSPF:
+          retSPFValor,
+
+        retornoRentabilidade:
+          retRentab,
+
+        spfAPagar:
+          spfPagarValor,
+
+        rentabilidadeTotal:
+          rentabilidadeTotal
+
+      });
+
+
+      // ==========================================================
+      // BANCO
+      // ==========================================================
 
       if (
         banco
@@ -744,9 +844,9 @@ export class DataExtractor {
       }
 
 
-      // ----------------------------------------------------------
-      // TIPO R
-      // ----------------------------------------------------------
+      // ==========================================================
+      // R
+      // ==========================================================
 
       const rKey =
         this.normalizeRType(
@@ -767,9 +867,9 @@ export class DataExtractor {
       }
 
 
-      // ----------------------------------------------------------
-      // AGRUPAMENTO POR VENDEDOR
-      // ----------------------------------------------------------
+      // ==========================================================
+      // VENDEDOR
+      // ==========================================================
 
       if (
         vendedor
@@ -790,7 +890,6 @@ export class DataExtractor {
 
               nome:
                 vendedor,
-
 
               R0: 0,
 
@@ -814,39 +913,19 @@ export class DataExtractor {
 
               RVW: 0,
 
-
               SPF: 0,
-
 
               receita: 0,
 
-
-              /*
-               * Retorno SPF
-               */
               retorno: 0,
 
-
-              /*
-               * Retorno Rentabilidade
-               */
               retornoRentab: 0,
 
-
-              /*
-               * Rentabilidade Total
-               */
               rentab: 0,
 
-
-              /*
-               * Total financiado
-               */
               financiado: 0,
 
-
               operacoes: 0,
-
 
               financiamentos: 0
 
@@ -861,10 +940,6 @@ export class DataExtractor {
           );
 
 
-        // --------------------------------------------------------
-        // CONTAGEM R
-        // --------------------------------------------------------
-
         if (
           Object.prototype.hasOwnProperty.call(
             seller,
@@ -875,10 +950,6 @@ export class DataExtractor {
           seller[rKey]++;
         }
 
-
-        // --------------------------------------------------------
-        // SPF
-        // --------------------------------------------------------
 
         if (
           this.isWithSpf(
@@ -892,59 +963,25 @@ export class DataExtractor {
         }
 
 
-        // --------------------------------------------------------
-        // RECEITA
-        // --------------------------------------------------------
-
         seller.receita +=
-          rentTotal > 0
-            ? rentTotal
-            : (
-                retSPFValor +
-                retRentab
-              );
+          rentabilidadeTotal;
 
-
-        // --------------------------------------------------------
-        // RENTABILIDADE TOTAL
-        // --------------------------------------------------------
 
         seller.rentab +=
-          rentTotal > 0
-            ? rentTotal
-            : (
-                retSPFValor +
-                retRentab
-              );
+          rentabilidadeTotal;
 
-
-        // --------------------------------------------------------
-        // RETORNO SPF
-        // --------------------------------------------------------
 
         seller.retorno +=
           retSPFValor;
 
 
-        // --------------------------------------------------------
-        // RETORNO RENTABILIDADE
-        // --------------------------------------------------------
-
         seller.retornoRentab +=
           retRentab;
 
 
-        // --------------------------------------------------------
-        // FINANCIADO
-        // --------------------------------------------------------
-
         seller.financiado +=
           fin;
 
-
-        // --------------------------------------------------------
-        // OPERAÇÕES
-        // --------------------------------------------------------
 
         seller.operacoes++;
 
@@ -954,9 +991,9 @@ export class DataExtractor {
     }
 
 
-    // ------------------------------------------------------------
-    // 5. RESUMO OFICIAL DOS VENDEDORES
-    // ------------------------------------------------------------
+    // ============================================================
+    // RESUMO OFICIAL
+    // ============================================================
 
     let sellers =
       this.extractOfficialSellerSummary(
@@ -964,12 +1001,6 @@ export class DataExtractor {
         sellerAgg
       );
 
-
-    /*
-     * Caso não exista um resumo oficial,
-     * utiliza os vendedores calculados
-     * diretamente das operações.
-     */
 
     if (
       !sellers.length
@@ -991,9 +1022,9 @@ export class DataExtractor {
     }
 
 
-    // ------------------------------------------------------------
+    // ============================================================
     // GARANTE RENTABILIDADE TOTAL
-    // ------------------------------------------------------------
+    // ============================================================
 
     if (
       rentab === 0 &&
@@ -1009,128 +1040,147 @@ export class DataExtractor {
     }
 
 
-    // ------------------------------------------------------------
-    // 6. RESULTADO
-    // ------------------------------------------------------------
+    // ============================================================
+    // AUDITORIA VISUAL
+    // ============================================================
+
+    console.groupCollapsed(
+      `[DataExtractor] DATASET — ${fileName} — ${storeName} — ${monthConfig.getMonthLabel(detectedMonth)}`
+    );
+
+
+    console.log({
+
+      arquivo:
+        fileName,
+
+      loja:
+        storeName,
+
+      marca:
+        brand,
+
+      mes:
+        monthConfig.getMonthLabel(
+          detectedMonth
+        ),
+
+      ano:
+        detectedYear,
+
+      periodKey,
+
+      linhaCabecalho:
+        start + 1,
+
+      linhasDaSecao:
+        sectionRows.length,
+
+      operacoes,
+
+      financiado,
+
+      retornoSPF:
+        retorno,
+
+      retornoRentabilidade:
+        retornoRentab,
+
+      spfAPagar:
+        spfPagar,
+
+      rentabilidadeTotal:
+        rentab
+
+    });
+
+
+    console.table(
+      auditRows
+    );
+
+
+    console.groupEnd();
+
+
+    // ============================================================
+    // RESULTADO
+    // ============================================================
 
     return {
 
-      /*
-       * Nome oficial da loja.
-       *
-       * MG INGLATERRA
-       */
       name:
         storeName,
 
-
-      /*
-       * Label utilizado para identificação
-       * da loja em componentes gerais.
-       *
-       * MG INGLATERRA
-       */
       label,
 
-
-      /*
-       * Nome curto.
-       *
-       * MG IGT
-       *
-       * A SellerTable pode utilizar
-       * essa propriedade para evitar
-       * nomes muito grandes.
-       */
       shortName,
 
-
-      /*
-       * Marca / identificação lógica.
-       *
-       * MG IGT
-       */
       brand,
-
 
       color:
         this.getStoreColor(
           storeName
         ),
 
-
       sourceFile:
         fileName,
 
-
       month:
         detectedMonth,
-
 
       monthLabel:
         monthConfig.getMonthLabel(
           detectedMonth
         ),
 
-
       monthOrder:
         MONTH_NAMES[
           detectedMonth
         ] ?? 99,
 
+      monthNumber,
 
-      /*
-       * Chave estável da loja.
-       *
-       * Para MG INGLATERRA:
-       *
-       * normalizeKey('MG INGLATERRA')
-       */
+      year:
+        detectedYear,
+
+      periodKey,
+
       storeKey,
 
 
-      sellers,
+      sellers:
+        sellers.map(
+          seller => ({
 
+            ...seller,
 
-      // ----------------------------------------------------------
-      // KPIs
-      // ----------------------------------------------------------
+            storeName,
+
+            storeShortName:
+              shortName,
+
+            storeLabel:
+              label,
+
+            storeKey
+
+          })
+        ),
+
 
       kpis: {
 
-        /*
-         * Total Financiado
-         */
         financiado,
 
-
-        /*
-         * Rentabilidade SPF
-         */
         retorno,
 
-
-        /*
-         * Rentabilidade Retorno
-         */
         retornoRentab,
 
-
-        /*
-         * SPF A Pagar
-         */
         spfPagar,
 
-
-        /*
-         * Rentabilidade Total
-         */
         rentab,
 
-
-        /*
-         * Operações
-         */
         operacoes
 
       },
@@ -1138,9 +1188,7 @@ export class DataExtractor {
 
       bancos,
 
-
       rCounts,
-
 
       active:
         true
@@ -1261,10 +1309,6 @@ export class DataExtractor {
       }
 
 
-      // ----------------------------------------------------------
-      // LEITURA DO RESUMO
-      // ----------------------------------------------------------
-
       for (
         let j = i + 1;
         j < sectionRows.length;
@@ -1304,7 +1348,9 @@ export class DataExtractor {
 
 
         if (
-          /^\d+$/.test(name)
+          /^\d+$/.test(
+            name
+          )
         ) {
 
           continue;
@@ -1334,89 +1380,70 @@ export class DataExtractor {
           nome:
             name,
 
-
           R0:
             this.readInteger(
               rr[r0Index]
             ),
-
 
           R1:
             this.readInteger(
               rr[r0Index + 1]
             ),
 
-
           R2:
             this.readInteger(
               rr[r0Index + 2]
             ),
-
 
           R3:
             this.readInteger(
               rr[r0Index + 3]
             ),
 
-
           R4:
             this.readInteger(
               rr[r0Index + 4]
             ),
-
 
           R5:
             this.readInteger(
               rr[r0Index + 5]
             ),
 
-
           RVW:
             this.readInteger(
               rr[r0Index + 6]
             ),
-
 
           SPF:
             this.readInteger(
               rr[r0Index + 7]
             ),
 
-
           receita:
             this.readCurrency(
               rr[receitaIndex]
             ),
 
-
-          // ----------------------------------------------------
-          // DADOS CALCULADOS DAS OPERAÇÕES
-          // ----------------------------------------------------
-
           retorno:
             operationSeller?.retorno ||
             0,
-
 
           retornoRentab:
             operationSeller?.retornoRentab ||
             0,
 
-
           rentab:
             operationSeller?.rentab ||
             0,
-
 
           financiado:
             operationSeller?.financiado ||
             0,
 
-
           operacoes:
             operationSeller?.operacoes ||
             0,
-
 
           financiamentos:
             operationSeller?.financiamentos ||
@@ -1440,7 +1467,7 @@ export class DataExtractor {
 
 
   // ==============================================================
-  // IDENTIFICAÇÃO DA LOJA
+  // TÍTULO ANTES DO CABEÇALHO
   // ==============================================================
 
   static findTitleBeforeHeader(
@@ -1452,22 +1479,22 @@ export class DataExtractor {
       /(JANEIRO|FEVEREIRO|MAR[CÇ]O|ABRIL|MAIO|JUNHO|JULHO|AGOSTO|SETEMBRO|OUTUBRO|NOVEMBRO|DEZEMBRO)/i;
 
 
-    // ------------------------------------------------------------
-    // PRIMEIRA TENTATIVA:
-    // PROCURA POR MÊS
-    // ------------------------------------------------------------
+    // Primeiro procuramos a loja.
+    // Isso evita confundir "MAIO" com o nome da loja.
 
     for (
       let i = headerIndex - 1;
       i >= Math.max(
         0,
-        headerIndex - 8
+        headerIndex - 12
       );
       i--
     ) {
 
       const row =
-        Array.isArray(rows[i])
+        Array.isArray(
+          rows[i]
+        )
           ? rows[i]
           : [];
 
@@ -1484,7 +1511,9 @@ export class DataExtractor {
 
         if (
           value &&
-          monthRegex.test(value) &&
+          /(MANDARIM|TERRACOTA|BYD|MG INGLATERRA|INGLATERRA)/i.test(
+            value
+          ) &&
           value.length <= 120
         ) {
 
@@ -1494,22 +1523,21 @@ export class DataExtractor {
     }
 
 
-    // ------------------------------------------------------------
-    // SEGUNDA TENTATIVA:
-    // PROCURA POR NOME DE LOJA
-    // ------------------------------------------------------------
+    // Se não achou loja, procura mês.
 
     for (
       let i = headerIndex - 1;
       i >= Math.max(
         0,
-        headerIndex - 8
+        headerIndex - 12
       );
       i--
     ) {
 
       const row =
-        Array.isArray(rows[i])
+        Array.isArray(
+          rows[i]
+        )
           ? rows[i]
           : [];
 
@@ -1524,18 +1552,9 @@ export class DataExtractor {
           );
 
 
-        /*
-         * Aqui incluímos INGLATERRA.
-         *
-         * Isso é importante para que
-         * "MG INGLATERRA SSA" seja
-         * reconhecido como a loja
-         * MG INGLATERRA.
-         */
-
         if (
           value &&
-          /(MANDARIM|TERRACOTA|BYD|MG INGLATERRA|INGLATERRA)/i.test(
+          monthRegex.test(
             value
           ) &&
           value.length <= 120
@@ -1552,7 +1571,7 @@ export class DataExtractor {
 
 
   // ==============================================================
-  // FALLBACK DO NOME DA LOJA
+  // FALLBACK
   // ==============================================================
 
   static makeFallbackStoreName(
@@ -1576,7 +1595,7 @@ export class DataExtractor {
 
 
   // ==============================================================
-  // IDENTIFICA A MARCA
+  // MARCA
   // ==============================================================
 
   static inferBrand(
@@ -1590,10 +1609,6 @@ export class DataExtractor {
       );
 
 
-    // ------------------------------------------------------------
-    // TERRACOTA
-    // ------------------------------------------------------------
-
     if (
       text.includes(
         'TERRACOTA'
@@ -1603,10 +1618,6 @@ export class DataExtractor {
       return 'TERRACOTA';
     }
 
-
-    // ------------------------------------------------------------
-    // BYD / MANDARIM
-    // ------------------------------------------------------------
 
     if (
       text.includes(
@@ -1621,10 +1632,6 @@ export class DataExtractor {
     }
 
 
-    // ------------------------------------------------------------
-    // MG INGLATERRA
-    // ------------------------------------------------------------
-
     if (
       text.includes(
         'MG INGLATERRA'
@@ -1638,16 +1645,12 @@ export class DataExtractor {
     }
 
 
-    // ------------------------------------------------------------
-    // FALLBACK
-    // ------------------------------------------------------------
-
     return 'MULTIMARCAS';
   }
 
 
   // ==============================================================
-  // NORMALIZA O NOME OFICIAL DA LOJA
+  // NOME OFICIAL
   // ==============================================================
 
   static displayStoreName(
@@ -1660,41 +1663,12 @@ export class DataExtractor {
       );
 
 
-    /*
-     * Remove o mês quando ele estiver
-     * no final do nome.
-     *
-     * Exemplo:
-     *
-     * MG INGLATERRA SSA - JULHO
-     *
-     * vira:
-     *
-     * MG INGLATERRA SSA
-     */
-
     name =
       name.replace(
         /\s*[-–—]\s*(JANEIRO|FEVEREIRO|MAR[CÇ]O|ABRIL|MAIO|JUNHO|JULHO|AGOSTO|SETEMBRO|OUTUBRO|NOVEMBRO|DEZEMBRO)(?:\s*[-–—]\s*\d+)?\s*$/i,
         ''
       );
 
-
-    /*
-     * ----------------------------------------------------------
-     * REGRA ESPECIAL MG INGLATERRA
-     * ----------------------------------------------------------
-     *
-     * Independentemente de aparecer:
-     *
-     * MG INGLATERRA
-     * MG INGLATERRA SSA
-     * INGLATERRA
-     *
-     * o nome oficial da loja será:
-     *
-     * MG INGLATERRA
-     */
 
     const normalized =
       this.normalizeHeader(
@@ -1725,22 +1699,13 @@ export class DataExtractor {
 
 
   // ==============================================================
-  // LABEL DA LOJA
+  // LABEL
   // ==============================================================
 
   static buildStoreLabel(
     brand,
     storeName
   ) {
-
-    /*
-     * MG IGT é apenas a identificação
-     * curta da marca.
-     *
-     * O nome da loja continua sendo:
-     *
-     * MG INGLATERRA
-     */
 
     if (
       brand === 'MG IGT'
@@ -1755,28 +1720,13 @@ export class DataExtractor {
 
 
   // ==============================================================
-  // CHAVE DA LOJA
+  // CHAVE
   // ==============================================================
 
   static buildStoreKey(
     brand,
     storeName
   ) {
-
-    /*
-     * A chave precisa representar
-     * a loja real e não o apelido.
-     *
-     * Portanto:
-     *
-     * MG IGT
-     *
-     * não é usado aqui.
-     *
-     * A chave será:
-     *
-     * MG INGLATERRA
-     */
 
     if (
       brand === 'MG IGT'
@@ -1795,26 +1745,140 @@ export class DataExtractor {
 
 
   // ==============================================================
-  // NOME CURTO DA LOJA
+  // NOME CANÔNICO
+  // ==============================================================
+
+  static resolveStoreName(
+    fileName,
+    rawStoreName,
+    brand
+  ) {
+
+    const text =
+      this.normalizeHeader(
+        `${fileName || ''} ${rawStoreName || ''}`
+      );
+
+
+    if (
+      brand === 'MG IGT' ||
+      text.includes(
+        'MG INGLATERRA'
+      ) ||
+      text.includes(
+        'INGLATERRA'
+      )
+    ) {
+
+      return 'MG INGLATERRA';
+    }
+
+
+    if (
+      brand === 'TERRACOTA'
+    ) {
+
+      if (
+        text.includes(
+          'VITORIA DA CONQUISTA'
+        ) ||
+        text.includes(
+          'VTC'
+        )
+      ) {
+
+        return 'TERRACOTA VITORIA DA CONQUISTA - VTC';
+      }
+
+
+      if (
+        text.includes(
+          'FEIRA DE SANTANA'
+        ) ||
+        text.includes(
+          'FSA'
+        )
+      ) {
+
+        return 'TERRACOTA FEIRA DE SANTANA - FSA';
+      }
+    }
+
+
+    if (
+      brand === 'BYD'
+    ) {
+
+      if (
+        text.includes(
+          'IGUATEMI'
+        ) ||
+        /\bIGT\b/.test(
+          text
+        )
+      ) {
+
+        return 'BYD MANDARIM IGUATEMI - IGT';
+      }
+
+
+      if (
+        text.includes(
+          'ITABUNA'
+        ) ||
+        /\bITB\b/.test(
+          text
+        ) ||
+        /\bIBT\b/.test(
+          text
+        )
+      ) {
+
+        return 'BYD MANDARIM ITABUNA - ITB';
+      }
+
+
+      if (
+        text.includes(
+          'LAURO DE FREITAS'
+        ) ||
+        /\bLF\b/.test(
+          text
+        )
+      ) {
+
+        return 'BYD MANDARIM LAURO DE FREITAS - LF';
+      }
+
+
+      if (
+        text.includes(
+          'FEIRA DE SANTANA'
+        ) ||
+        /\bFSA\b/.test(
+          text
+        )
+      ) {
+
+        return 'BYD MANDARIM FEIRA DE SANTANA - FSA';
+      }
+    }
+
+
+    return this.displayStoreName(
+      rawStoreName
+    );
+  }
+
+
+  // ==============================================================
+  // NOME CURTO
   // ==============================================================
 
   static getShortStoreName(
     brand,
     storeName
   ) {
-
-    /*
-     * Esse campo existe especificamente
-     * para componentes que possuem pouco
-     * espaço horizontal.
-     *
-     * Exemplo:
-     *
-     * SellerTable
-     * filtros
-     * indicadores
-     * comparativos compactos
-     */
 
     if (
       brand === 'MG IGT'
@@ -1854,7 +1918,7 @@ export class DataExtractor {
 
 
   // ==============================================================
-  // LOCALIZA CABEÇALHO EXATO
+  // CABEÇALHO EXATO
   // ==============================================================
 
   static findExactHeader(
@@ -1897,7 +1961,7 @@ export class DataExtractor {
 
 
   // ==============================================================
-  // LOCALIZA CABEÇALHO POR INCLUSÃO
+  // CABEÇALHO POR INCLUSÃO
   // ==============================================================
 
   static findHeader(
@@ -1931,9 +1995,9 @@ export class DataExtractor {
 
     const normalizedAliases =
       aliases.map(
-        alias =>
+        value =>
           this.normalizeHeader(
-            alias
+            value
           )
       );
 
@@ -1965,7 +2029,7 @@ export class DataExtractor {
 
 
   // ==============================================================
-  // LOCALIZA PRÓXIMO CABEÇALHO EXATO
+  // PRÓXIMO CABEÇALHO EXATO
   // ==============================================================
 
   static findNextExact(
@@ -2009,7 +2073,7 @@ export class DataExtractor {
 
 
   // ==============================================================
-  // LEITURA DE MOEDA
+  // MOEDA
   // ==============================================================
 
   static readCurrency(
@@ -2019,7 +2083,9 @@ export class DataExtractor {
 
     if (
       index < 0 ||
-      !Array.isArray(row)
+      !Array.isArray(
+        row
+      )
     ) {
 
       return 0;
@@ -2033,7 +2099,7 @@ export class DataExtractor {
 
 
   // ==============================================================
-  // LEITURA DE INTEIRO
+  // INTEIRO
   // ==============================================================
 
   static readInteger(
@@ -2090,7 +2156,7 @@ export class DataExtractor {
 
 
   // ==============================================================
-  // IDENTIFICA LINHA DE TOTAL
+  // TOTAL
   // ==============================================================
 
   static isTotalRow(
@@ -2114,7 +2180,7 @@ export class DataExtractor {
 
 
   // ==============================================================
-  // IDENTIFICA COM SPF
+  // SPF
   // ==============================================================
 
   static isWithSpf(
@@ -2138,14 +2204,14 @@ export class DataExtractor {
 
 
   // ==============================================================
-  // NORMALIZA TIPO R
+  // R
   // ==============================================================
 
   static normalizeRType(
     value
   ) {
 
-    let r =
+    const r =
       this.normalizeHeader(
         value
       )
@@ -2154,10 +2220,6 @@ export class DataExtractor {
         ''
       );
 
-
-    /*
-     * Tratamento legado do R Volkswagen.
-     */
 
     if (
       r === 'R-VW' ||
@@ -2169,28 +2231,22 @@ export class DataExtractor {
     }
 
 
-    if (
-      [
-        'R0',
-        'R1',
-        'R2',
-        'R3',
-        'R4',
-        'R5',
-        'R50',
-        'R75',
-        'R100',
-        'R150'
-      ].includes(
-        r
-      )
-    ) {
-
-      return r;
-    }
-
-
-    return r;
+    return [
+      'R0',
+      'R1',
+      'R2',
+      'R3',
+      'R4',
+      'R5',
+      'R50',
+      'R75',
+      'R100',
+      'R150'
+    ].includes(
+      r
+    )
+      ? r
+      : r;
   }
 
 
@@ -2215,10 +2271,12 @@ export class DataExtractor {
         );
       }
 
-    } catch (error) {
+    } catch (
+      error
+    ) {
 
       console.warn(
-        '[DataExtractor] Não foi possível obter a cor da loja:',
+        '[DataExtractor] Erro ao obter cor:',
         error
       );
     }

@@ -115,26 +115,155 @@ export class ComparisonSection {
     this.renderComparison();
   }
 
-  getStoreKey(data) {
+  getStoreIdentityText(data) {
     if (!data) return '';
 
-    return (
-      data.storeKey ||
-      normalizeKey(`${data.brand || ''} ${data.name || ''}`)
+    return normalizeKey(
+      [
+        data.brand,
+        data.name,
+        data.label,
+        data.storeKey,
+        data.sourceFile
+      ]
+        .filter(Boolean)
+        .join(' ')
     );
   }
 
-  getStoreLabel(data) {
-    if (!data) return '';
+  getCanonicalStore(data) {
+    const text = this.getStoreIdentityText(data);
+    const brand = normalizeKey(data?.brand || '');
 
-    const brand = String(data.brand || '').trim();
-    const name = String(data.name || '').trim();
-
-    if (brand && name) {
-      return `${brand} • ${name}`;
+    if (
+      brand.includes('MG IGT') ||
+      text.includes('MG INGLATERRA') ||
+      text.includes('INGLATERRA')
+    ) {
+      return {
+        key: 'MG INGLATERRA',
+        label: 'MG INGLATERRA'
+      };
     }
 
-    return name || brand || 'Loja';
+    if (brand.includes('TERRACOTA') || text.includes('TERRACOTA')) {
+      if (
+        text.includes('VITORIA DA CONQUISTA') ||
+        /\bVTC\b/.test(text)
+      ) {
+        return {
+          key: 'TERRACOTA VITORIA DA CONQUISTA VTC',
+          label: 'TERRACOTA • TERRACOTA VITÓRIA DA CONQUISTA - VTC'
+        };
+      }
+
+      if (
+        text.includes('FEIRA DE SANTANA') ||
+        /\bFSA\b/.test(text)
+      ) {
+        return {
+          key: 'TERRACOTA FEIRA DE SANTANA FSA',
+          label: 'TERRACOTA • TERRACOTA FEIRA DE SANTANA - FSA'
+        };
+      }
+    }
+
+    if (brand.includes('BYD') || text.includes('BYD') || text.includes('MANDARIM')) {
+      if (text.includes('IGUATEMI') || /\bIGT\b/.test(text)) {
+        return {
+          key: 'BYD MANDARIM IGUATEMI IGT',
+          label: 'BYD • BYD MANDARIM IGUATEMI - IGT'
+        };
+      }
+
+      if (text.includes('ITABUNA') || /\b(?:ITB|IBT)\b/.test(text)) {
+        return {
+          key: 'BYD MANDARIM ITABUNA ITB',
+          label: 'BYD • BYD MANDARIM ITABUNA - ITB'
+        };
+      }
+
+      if (text.includes('LAURO DE FREITAS') || /\bLF\b/.test(text)) {
+        return {
+          key: 'BYD MANDARIM LAURO DE FREITAS LF',
+          label: 'BYD • BYD MANDARIM LAURO DE FREITAS - LF'
+        };
+      }
+
+      if (text.includes('FEIRA DE SANTANA') || /\bFSA\b/.test(text)) {
+        return {
+          key: 'BYD MANDARIM FEIRA DE SANTANA FSA',
+          label: 'BYD • BYD MANDARIM FEIRA DE SANTANA - FSA'
+        };
+      }
+    }
+
+    const key =
+      data.storeKey ||
+      normalizeKey(`${data.brand || ''} ${data.name || ''}`);
+
+    const brandLabel = String(data.brand || '').trim();
+    const nameLabel = String(data.name || '').trim();
+
+    return {
+      key,
+      label:
+        data.label ||
+        (brandLabel && nameLabel
+          ? `${brandLabel} • ${nameLabel}`
+          : nameLabel || brandLabel || 'Loja')
+    };
+  }
+
+  getStoreKey(data) {
+    return this.getCanonicalStore(data).key;
+  }
+
+  getStoreLabel(data) {
+    return this.getCanonicalStore(data).label;
+  }
+
+  // Identidade única do período.
+  // O mês sozinho (ex.: "Julho") não é suficiente quando existem
+  // arquivos de anos diferentes ou mais de um registro para o mesmo mês.
+  getPeriodKey(data) {
+    if (!data) return '';
+
+    if (data.periodKey) {
+      return String(data.periodKey);
+    }
+
+    const year =
+      Number(data.year) ||
+      this.extractYearFromSource(data.sourceFile);
+
+    const month =
+      Number(data.monthNumber) ||
+      Number(data.monthOrder) ||
+      0;
+
+    if (!year || !month) return '';
+
+    return `${year}-${String(month).padStart(2, '0')}`;
+  }
+
+  extractYearFromSource(sourceFile) {
+    const match = String(sourceFile || '').match(/\b(20\d{2})\b/);
+    return match ? Number(match[1]) : 0;
+  }
+
+  getPeriodLabel(data) {
+    if (!data) return 'Período não identificado';
+
+    const month =
+      data.monthLabel ||
+      'Mês não identificado';
+
+    const year =
+      Number(data.year) ||
+      this.extractYearFromSource(data.sourceFile);
+
+    return year ? `${month}/${year}` : month;
   }
 
   getSellerKey(name) {
@@ -222,17 +351,39 @@ export class ComparisonSection {
         map.set(key, {
           key,
           label: this.getStoreLabel(data),
-          months: []
+          months: new Map()
         });
       }
 
-      map.get(key).months.push(data);
+      const store = map.get(key);
+      const periodKey = this.getPeriodKey(data);
+
+      // Registros sem período não entram no comparativo, pois não podem
+      // ser associados com segurança a um mês específico.
+      if (!periodKey) return;
+
+      // Se o mesmo arquivo/loja/período aparecer novamente, o último
+      // registro substitui o anterior em vez de criar um mês duplicado.
+      store.months.set(periodKey, {
+        ...data,
+        periodKey,
+        year:
+          Number(data.year) ||
+          this.extractYearFromSource(data.sourceFile)
+      });
     });
 
     const result = Array.from(map.values());
 
     result.forEach((store) => {
-      store.months.sort((a, b) => {
+      store.months = Array.from(store.months.values()).sort((a, b) => {
+        const yearA = Number(a.year) || 0;
+        const yearB = Number(b.year) || 0;
+
+        if (yearA !== yearB) {
+          return yearA - yearB;
+        }
+
         const monthA = Number(a.monthOrder || 99);
         const monthB = Number(b.monthOrder || 99);
 
@@ -467,14 +618,23 @@ export class ComparisonSection {
     const monthsA = storeA.months;
     const monthsB = storeB.months;
 
-    if (!this.selectedMonthA) {
+    const availablePeriodA = monthsA.map(month => this.getPeriodKey(month));
+    const availablePeriodB = monthsB.map(month => this.getPeriodKey(month));
+
+    if (
+      !this.selectedMonthA ||
+      !availablePeriodA.includes(this.selectedMonthA)
+    ) {
       this.selectedMonthA =
-        monthsA[0]?.monthLabel || '';
+        this.getPeriodKey(monthsA[0]) || '';
     }
 
-    if (!this.selectedMonthB) {
+    if (
+      !this.selectedMonthB ||
+      !availablePeriodB.includes(this.selectedMonthB)
+    ) {
       this.selectedMonthB =
-        monthsB[0]?.monthLabel || '';
+        this.getPeriodKey(monthsB[0]) || '';
     }
 
     const dataA = this.findMonthRecord(
@@ -1286,14 +1446,19 @@ export class ComparisonSection {
     return months
       .map(month => {
         const value =
-          month.monthLabel || 'Mês';
+          this.getPeriodKey(month) ||
+          month.monthLabel ||
+          'Mês';
+
+        const label =
+          this.getPeriodLabel(month);
 
         return `
           <option
             value="${escapeHtml(value)}"
             ${value === selected ? 'selected' : ''}
           >
-            ${escapeHtml(value)}
+            ${escapeHtml(label)}
           </option>
         `;
       })
@@ -1343,12 +1508,15 @@ export class ComparisonSection {
       .join('');
   }
 
-  findMonthRecord(months, monthLabel) {
+  findMonthRecord(months, periodKey) {
+    if (!Array.isArray(months) || months.length === 0) {
+      return null;
+    }
+
     return (
       months.find(
-        month => month.monthLabel === monthLabel
+        month => this.getPeriodKey(month) === periodKey
       ) ||
-      months[0] ||
       null
     );
   }

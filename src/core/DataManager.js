@@ -1,93 +1,507 @@
-import { CSVParser } from '../parsers/CSVParser.js';
-import { ExcelParser } from '../parsers/ExcelParser.js';
-import { DataExtractor } from '../parsers/DataExtractor.js';
+import {
+  CSVParser
+} from '../parsers/CSVParser.js';
+
+import {
+  ExcelParser
+} from '../parsers/ExcelParser.js';
+
+import {
+  DataExtractor
+} from '../parsers/DataExtractor.js';
+
 
 export class DataManager {
-  constructor(eventBus) {
-    this.eventBus = eventBus;
+
+
+  constructor(
+    eventBus
+  ) {
+
+    this.eventBus =
+      eventBus;
+
     this.datasets = [];
   }
 
-  async loadFiles(files) {
+
+  // ============================================================
+  // CARREGAMENTO
+  // ============================================================
+
+  async loadFiles(
+    files
+  ) {
+
     const newData = [];
-    
-    for (const file of files) {
+
+
+    for (
+      const file of files
+    ) {
+
       try {
-        console.log(`Processando arquivo: ${file.name}`);
-        const parser = this.getParser(file);
-        const rows = await parser.parse(file);
-        
-        // Remove dados antigos do mesmo arquivo
-        this.datasets = this.datasets.filter(d => d.sourceFile !== file.name);
-        
-        const extracted = DataExtractor.extract(rows, file.name);
-        
-        if (extracted.length === 0) {
-          console.warn(`Nenhuma loja encontrada no arquivo: ${file.name}`);
-          alert(`Não foi possível identificar lojas no arquivo:\n${file.name}\n\nVerifique se o arquivo contém as colunas: CLIENTE, BANCO, VENDEDOR`);
+
+        console.groupCollapsed(
+          `[DataManager] PROCESSANDO: ${file.name}`
+        );
+
+
+        // ======================================================
+        // PARSER
+        // ======================================================
+
+        const parser =
+          this.getParser(
+            file
+          );
+
+
+        const rows =
+          await parser.parse(
+            file
+          );
+
+
+        console.log(
+          'Linhas recebidas pelo DataExtractor:',
+          rows.length
+        );
+
+
+        // ======================================================
+        // REMOVE SOMENTE O MESMO ARQUIVO
+        // ======================================================
+
+        this.datasets =
+          this.datasets.filter(
+            dataset =>
+              dataset.sourceFile !==
+              file.name
+          );
+
+
+        // ======================================================
+        // EXTRAI
+        // ======================================================
+
+        const extracted =
+          DataExtractor.extract(
+            rows,
+            file.name
+          );
+
+
+        if (
+          !extracted.length
+        ) {
+
+          console.warn(
+            `[DataManager] Nenhum dataset extraído de ${file.name}.`
+          );
+
+
+          console.groupEnd();
+
+
+          alert(
+            `Não foi possível identificar dados de operações no arquivo:\n${file.name}`
+          );
+
+
           continue;
         }
-        
-        console.log(`Lojas encontradas em ${file.name}:`, extracted.map(d => d.label));
-        newData.push(...extracted);
-      } catch (error) {
-        console.error(`Erro ao processar ${file.name}:`, error);
-        alert(`Erro ao ler o arquivo ${file.name}.\n\n${error.message || error}`);
+
+
+        // ======================================================
+        // CRIA IDENTIDADE ÚNICA
+        // ======================================================
+
+        const prepared =
+          extracted.map(
+            (
+              dataset,
+              sectionIndex
+            ) => ({
+
+              ...dataset,
+
+
+              datasetId:
+                [
+                  dataset.storeKey ||
+                    dataset.label ||
+                    'LOJA',
+
+                  dataset.periodKey ||
+                    'SEM-PERIODO',
+
+                  file.name,
+
+                  sectionIndex
+
+                ].join(
+                  '::'
+                ),
+
+
+              sourceFile:
+                file.name,
+
+
+              kpis: {
+
+                ...(dataset.kpis || {})
+
+              },
+
+
+              sellers:
+                Array.isArray(
+                  dataset.sellers
+                )
+
+                  ? dataset.sellers.map(
+                      seller => ({
+                        ...seller
+                      })
+                    )
+
+                  : []
+
+            })
+          );
+
+
+        // ======================================================
+        // AUDITORIA DO ARQUIVO
+        // ======================================================
+
+        console.table(
+
+          prepared.map(
+            dataset => ({
+
+              arquivo:
+                dataset.sourceFile,
+
+              datasetId:
+                dataset.datasetId,
+
+              loja:
+                dataset.label,
+
+              storeKey:
+                dataset.storeKey,
+
+              mes:
+                dataset.monthLabel,
+
+              periodo:
+                dataset.periodKey,
+
+              financiado:
+                dataset.kpis?.financiado ??
+                0,
+
+              retornoSPF:
+                dataset.kpis?.retorno ??
+                0,
+
+              retornoRentab:
+                dataset.kpis?.retornoRentab ??
+                0,
+
+              spfAPagar:
+                dataset.kpis?.spfPagar ??
+                0,
+
+              rentabilidadeTotal:
+                dataset.kpis?.rentab ??
+                0,
+
+              operacoes:
+                dataset.kpis?.operacoes ??
+                0
+
+            })
+          )
+
+        );
+
+
+        newData.push(
+          ...prepared
+        );
+
+
+        console.groupEnd();
+
+      } catch (
+        error
+      ) {
+
+        console.error(
+          `[DataManager] Erro ao processar ${file.name}:`,
+          error
+        );
+
+
+        console.groupEnd();
+
+
+        alert(
+          `Erro ao ler o arquivo ${file.name}.\n\n${
+            error.message ||
+            error
+          }`
+        );
       }
     }
 
-    if (newData.length > 0) {
-      this.datasets.push(...newData);
-      console.log(`Total de lojas carregadas: ${this.datasets.length}`);
+
+    // ============================================================
+    // ADICIONA NOVOS DATASETS
+    // ============================================================
+
+    if (
+      newData.length
+    ) {
+
+      this.datasets.push(
+        ...newData
+      );
     }
-    
-    this.eventBus.emit('data:updated', this.getAllData());
+
+
+    // ============================================================
+    // SNAPSHOT FINAL
+    // ============================================================
+
+    console.groupCollapsed(
+      '[DataManager] SNAPSHOT FINAL DOS DATASETS'
+    );
+
+
+    console.table(
+
+      this.datasets.map(
+        dataset => ({
+
+          datasetId:
+            dataset.datasetId,
+
+          arquivo:
+            dataset.sourceFile,
+
+          loja:
+            dataset.label,
+
+          mes:
+            dataset.monthLabel,
+
+          periodo:
+            dataset.periodKey,
+
+          financiado:
+            dataset.kpis?.financiado ??
+            0,
+
+          retornoSPF:
+            dataset.kpis?.retorno ??
+            0,
+
+          retornoRentab:
+            dataset.kpis?.retornoRentab ??
+            0,
+
+          rentabilidadeTotal:
+            dataset.kpis?.rentab ??
+            0,
+
+          operacoes:
+            dataset.kpis?.operacoes ??
+            0
+
+        })
+      )
+
+    );
+
+
+    console.groupEnd();
+
+
+    // ============================================================
+    // ATUALIZA A APLICAÇÃO
+    // ============================================================
+
+    this.eventBus.emit(
+      'data:updated',
+      this.getAllData()
+    );
   }
 
-  getParser(file) {
-    return file.name.match(/\.csv$/i) ? new CSVParser() : new ExcelParser();
+
+  // ============================================================
+  // PARSER
+  // ============================================================
+
+  getParser(
+    file
+  ) {
+
+    return /\.csv$/i.test(
+      file.name
+    )
+
+      ? new CSVParser()
+
+      : new ExcelParser();
   }
+
+
+  // ============================================================
+  // DADOS ATIVOS
+  // ============================================================
 
   getActiveData() {
-    return this.datasets.filter(d => d.active !== false);
+
+    return this.datasets.filter(
+      dataset =>
+        dataset.active !== false
+    );
   }
+
+
+  // ============================================================
+  // TODOS OS DADOS
+  // ============================================================
 
   getAllData() {
-    return [...this.datasets];
+
+    return [
+      ...this.datasets
+    ];
   }
 
-  toggleDataset(index) {
-    if (index >= 0 && index < this.datasets.length) {
-      this.datasets[index].active = this.datasets[index].active === false;
-      console.log(`Loja ${this.datasets[index].label}: ${this.datasets[index].active !== false ? 'ATIVADA' : 'DESATIVADA'}`);
-      this.eventBus.emit('data:updated', this.getAllData());
+
+  // ============================================================
+  // ATIVA/DESATIVA DATASET
+  // ============================================================
+
+  toggleDataset(
+    index
+  ) {
+
+    if (
+      index < 0 ||
+      index >= this.datasets.length
+    ) {
+
+      return;
     }
+
+
+    this.datasets[index].active =
+      this.datasets[index].active ===
+      false;
+
+
+    this.eventBus.emit(
+      'data:updated',
+      this.getAllData()
+    );
   }
 
-  removeDataset(index) {
-    if (index >= 0 && index < this.datasets.length) {
-      const storeName = this.datasets[index].label;
-      this.datasets.splice(index, 1);
-      console.log(`Loja removida: ${storeName}. Restam ${this.datasets.length} loja(s).`);
-      this.eventBus.emit('data:updated', this.getAllData());
+
+  // ============================================================
+  // REMOVE DATASET
+  // ==============================================================
+
+  removeDataset(
+    index
+  ) {
+
+    if (
+      index < 0 ||
+      index >= this.datasets.length
+    ) {
+
+      return;
     }
+
+
+    this.datasets.splice(
+      index,
+      1
+    );
+
+
+    this.eventBus.emit(
+      'data:updated',
+      this.getAllData()
+    );
   }
+
+
+  // ============================================================
+  // ATIVA TODOS
+  // ============================================================
 
   activateAll() {
-    this.datasets.forEach(d => d.active = true);
-    this.eventBus.emit('data:updated', this.getAllData());
+
+    this.datasets.forEach(
+      dataset => {
+
+        dataset.active =
+          true;
+      }
+    );
+
+
+    this.eventBus.emit(
+      'data:updated',
+      this.getAllData()
+    );
   }
+
+
+  // ============================================================
+  // DESATIVA TODOS
+  // ============================================================
 
   deactivateAll() {
-    this.datasets.forEach(d => d.active = false);
-    this.eventBus.emit('data:updated', this.getAllData());
+
+    this.datasets.forEach(
+      dataset => {
+
+        dataset.active =
+          false;
+      }
+    );
+
+
+    this.eventBus.emit(
+      'data:updated',
+      this.getAllData()
+    );
   }
 
+
+  // ============================================================
+  // LIMPA TUDO
+  // ============================================================
+
   clearAll() {
-    console.log('Limpando todos os dados...');
+
     this.datasets = [];
-    // CORREÇÃO: Emite APENAS data:updated com array vazio
-    // O data:cleared é redundante e causa dupla limpeza
-    this.eventBus.emit('data:updated', []);
+
+
+    this.eventBus.emit(
+      'data:updated',
+      []
+    );
   }
+
 }
