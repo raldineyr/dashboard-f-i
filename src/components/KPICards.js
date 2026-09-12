@@ -7,7 +7,7 @@ export class KPICards {
     this.lastData = null;
     this.cards = [
       { id: 'kpiFinanciado', icon: 'fa-money-bill-wave', label: 'Total financiado', sublabel: 'Financiamento', formatter: formatBRL },
-      { id: 'kpiRentab', icon: 'fa-chart-bar', label: 'Rentabilidade Total', sublabel: 'Total bruto', formatter: formatBRL },
+      { id: 'kpiRentab', icon: 'fa-chart-bar', label: 'Rentabilidade Total', sublabel: 'Total Liquido', formatter: formatBRL },
       { id: 'kpiRetornoRentab', icon: 'fa-hand-holding-usd', label: 'Rentabilidade Retorno', sublabel: 'R[1..150]', formatter: formatBRL },
       { id: 'kpiRetorno', icon: 'fa-arrow-left', label: 'Rentabilidade SPF', sublabel: 'SPF', formatter: formatBRL },
       { id: 'kpiOperacoes', icon: 'fa-shopping-cart', label: 'Operações', sublabel: 'Contratos assinados', formatter: formatInteger },
