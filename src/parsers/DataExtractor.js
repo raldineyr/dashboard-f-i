@@ -1754,10 +1754,26 @@ export class DataExtractor {
     brand
   ) {
 
+    // O título da seção tem prioridade sobre o nome do arquivo.
+    // Um único CSV pode conter IGT, ITB e LF no mesmo nome de arquivo.
+    // Portanto, nunca devemos classificar a seção usando o nome completo
+    // do arquivo quando existe um título específico da seção.
+    const sectionText =
+      this.normalizeHeader(rawStoreName || '');
+
+    const fileText =
+      this.normalizeHeader(fileName || '');
+
+    const hasSectionIdentity =
+      sectionText.includes('MANDARIM') ||
+      sectionText.includes('TERRACOTA') ||
+      sectionText.includes('BYD') ||
+      sectionText.includes('INGLATERRA');
+
     const text =
-      this.normalizeHeader(
-        `${fileName || ''} ${rawStoreName || ''}`
-      );
+      hasSectionIdentity
+        ? sectionText
+        : fileText;
 
 
     if (
