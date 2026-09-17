@@ -1,0 +1,276 @@
+/* =========================================================
+   GRID DOS KPIs
+   ========================================================= */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-4xl);
+  width: 100%;
+}
+
+
+/* =========================================================
+   CARD KPI
+   ========================================================= */
+
+.kpi-card {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+
+  background: var(--bg-lighter);
+  border-radius: var(--radius-xl);
+  padding: 16px 16px 14px;
+
+  border: 1px solid var(--border-color);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  overflow: visible;
+
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+
+.kpi-card:hover {
+  border-color: var(--border-dark);
+  background: var(--bg-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+
+/* =========================================================
+   TÍTULO DO KPI
+   ========================================================= */
+
+.kpi-label {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  font-size: 0.72rem;
+  line-height: 1.2;
+
+  text-transform: uppercase;
+  letter-spacing: 0.045em;
+
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-semibold);
+
+  text-align: center;
+
+  white-space: nowrap;
+}
+
+
+.kpi-label i {
+  flex-shrink: 0;
+
+  font-size: 0.70rem;
+
+  color: var(--color-text-light);
+}
+
+
+/* =========================================================
+   VALOR PRINCIPAL
+   ========================================================= */
+
+/*
+   Título:
+   0.72rem
+
+   Valor anterior:
+   0.90rem
+
+   Valor atual:
+   1.125rem
+
+   Aumento adicional de 25%.
+*/
+
+.kpi-value {
+  display: block;
+
+  width: 100%;
+  min-width: 0;
+
+  margin-top: 5px;
+
+  font-size: 1.125rem;
+  line-height: 1.2;
+
+  font-weight: var(--font-weight-bold);
+
+  color: var(--color-text-primary);
+
+  letter-spacing: -0.2px;
+
+  text-align: center;
+
+  white-space: nowrap;
+
+  overflow: visible;
+
+  text-overflow: clip;
+}
+
+
+/*
+   Garante que elementos internos do valor
+   não quebrem para outra linha.
+*/
+
+.kpi-value,
+.kpi-value * {
+  white-space: nowrap !important;
+}
+
+
+/* =========================================================
+   SUBTÍTULO
+   ========================================================= */
+
+.kpi-sub {
+  width: 100%;
+  min-width: 0;
+
+  margin-top: 4px;
+
+  font-size: 0.68rem;
+  line-height: 1.2;
+
+  color: var(--color-text-light);
+
+  font-weight: var(--font-weight-normal);
+
+  text-align: center;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   TELAS MÉDIAS
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+  .kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+    gap: var(--spacing-md);
+  }
+
+  .kpi-card {
+    padding: 15px 14px 13px;
+  }
+
+  .kpi-label {
+    font-size: 0.72rem;
+  }
+
+  .kpi-value {
+    font-size: 1.125rem;
+  }
+
+  .kpi-sub {
+    font-size: 0.68rem;
+  }
+}
+
+
+/* =========================================================
+   TABLETS
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: var(--spacing-md);
+  }
+
+  .kpi-card {
+    padding: 14px 13px 12px;
+  }
+
+  .kpi-label {
+    font-size: 0.72rem;
+  }
+
+  .kpi-value {
+    font-size: 1.125rem;
+  }
+
+  .kpi-sub {
+    font-size: 0.65rem;
+  }
+}
+
+
+/* =========================================================
+   CELULARES
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-sm);
+  }
+
+  .kpi-card {
+    padding: 13px 12px 11px;
+    border-radius: var(--radius-lg);
+  }
+
+  .kpi-label {
+    font-size: 0.72rem;
+  }
+
+  .kpi-value {
+    font-size: 1.125rem;
+  }
+
+  .kpi-sub {
+    font-size: 0.62rem;
+  }
+}
+
+
+/* =========================================================
+   CELULARES MUITO PEQUENOS
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-label {
+    font-size: 0.72rem;
+  }
+
+  .kpi-value {
+    font-size: 1.125rem;
+  }
+
+  .kpi-sub {
+    font-size: 0.62rem;
+  }
+}

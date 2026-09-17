@@ -1,0 +1,466 @@
+<div id="charts-container">
+      <div class="chart-grid">
+
+        
+      <div class="chart-card" data-chart-key="vendedor" style="min-height:370px;box-sizing:border-box;">
+
+        <h3>
+          <i class="fas fa-users"></i>
+          RENTABILIDADE POR VENDEDOR
+        </h3>
+
+        <div class="chart-toolbar" style="
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            width:100%;
+            flex-wrap:wrap;
+            box-sizing:border-box;
+          ">
+
+          <span class="chart-type-label">
+            Visualização
+          </span>
+
+          <select class="chart-type-select" id="chartType_vendedor" aria-label="Selecionar visualização do gráfico">
+            
+                  <option value="bar" selected="">
+                    Barras
+                  </option>
+                
+                  <option value="line">
+                    Linhas
+                  </option>
+                
+                  <option value="radar">
+                    Radar
+                  </option>
+                
+                  <option value="polarArea">
+                    Área polar
+                  </option>
+                
+                  <option value="doughnut">
+                    Rosca
+                  </option>
+                
+                  <option value="pie">
+                    Pizza
+                  </option>
+                
+          </select>
+
+          <span class="chart-type-label chart-values-label">
+            Valores
+          </span>
+
+          <select class="chart-type-select chart-values-select" id="chartValues_vendedor" aria-label="Ativar ou desativar valores do gráfico">
+            <option value="on" selected="">
+              Ativados
+            </option>
+
+            <option value="off">
+              Desativados
+            </option>
+          </select>
+
+        </div>
+
+        <div class="chart-container" style="
+            position:relative;
+            width:100%;
+            height:280px;
+            min-height:280px;
+          ">
+          <canvas id="chart_vendedor" width="361" height="280" style="display: block; box-sizing: border-box; height: 280px; width: 361px;"></canvas>
+        </div>
+
+      </div>
+    
+
+        
+      <div class="chart-card" data-chart-key="retornoSpf" style="min-height:370px;box-sizing:border-box;">
+
+        <h3>
+          <i class="fas fa-chart-pie"></i>
+          RENTABILIDADE SPF vs RENTABILIDADE RETORNO
+        </h3>
+
+        <div class="chart-toolbar" style="
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            width:100%;
+            flex-wrap:wrap;
+            box-sizing:border-box;
+          ">
+
+          <span class="chart-type-label">
+            Visualização
+          </span>
+
+          <select class="chart-type-select" id="chartType_retornoSpf" aria-label="Selecionar visualização do gráfico">
+            
+                  <option value="doughnut" selected="">
+                    Rosca
+                  </option>
+                
+                  <option value="pie">
+                    Pizza
+                  </option>
+                
+                  <option value="bar">
+                    Barras
+                  </option>
+                
+                  <option value="polarArea">
+                    Área polar
+                  </option>
+                
+                  <option value="line">
+                    Linhas
+                  </option>
+                
+          </select>
+
+          <span class="chart-type-label chart-values-label">
+            Valores
+          </span>
+
+          <select class="chart-type-select chart-values-select" id="chartValues_retornoSpf" aria-label="Ativar ou desativar valores do gráfico">
+            <option value="on" selected="">
+              Ativados
+            </option>
+
+            <option value="off">
+              Desativados
+            </option>
+          </select>
+
+        </div>
+
+        <div class="chart-container" style="
+            position:relative;
+            width:100%;
+            height:280px;
+            min-height:280px;
+          ">
+          <canvas id="chart_retornoSpf" width="361" height="280" style="display: block; box-sizing: border-box; height: 280px; width: 361px;"></canvas>
+        </div>
+
+      </div>
+    
+
+        
+      <div class="chart-card" data-chart-key="banco" style="min-height:370px;box-sizing:border-box;">
+
+        <h3>
+          <i class="fas fa-university"></i>
+          FINANCIAMENTOS POR BANCO
+        </h3>
+
+        <div class="chart-toolbar" style="
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            width:100%;
+            flex-wrap:wrap;
+            box-sizing:border-box;
+          ">
+
+          <span class="chart-type-label">
+            Visualização
+          </span>
+
+          <select class="chart-type-select" id="chartType_banco" aria-label="Selecionar visualização do gráfico">
+            
+                  <option value="bar" selected="">
+                    Barras
+                  </option>
+                
+                  <option value="line">
+                    Linhas
+                  </option>
+                
+                  <option value="radar">
+                    Radar
+                  </option>
+                
+                  <option value="doughnut">
+                    Rosca
+                  </option>
+                
+                  <option value="polarArea">
+                    Área polar
+                  </option>
+                
+                  <option value="pie">
+                    Pizza
+                  </option>
+                
+          </select>
+
+          <span class="chart-type-label chart-values-label">
+            Valores
+          </span>
+
+          <select class="chart-type-select chart-values-select" id="chartValues_banco" aria-label="Ativar ou desativar valores do gráfico">
+            <option value="on" selected="">
+              Ativados
+            </option>
+
+            <option value="off">
+              Desativados
+            </option>
+          </select>
+
+        </div>
+
+        <div class="chart-container" style="
+            position:relative;
+            width:100%;
+            height:280px;
+            min-height:280px;
+          ">
+          <canvas id="chart_banco" width="361" height="280" style="display: block; box-sizing: border-box; height: 280px; width: 361px;"></canvas>
+        </div>
+
+      </div>
+    
+
+        
+      <div class="chart-card" data-chart-key="rType" style="min-height:370px;box-sizing:border-box;">
+
+        <h3>
+          <i class="fas fa-tags"></i>
+          COMISSÃO TIPO R
+        </h3>
+
+        <div class="chart-toolbar" style="
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            width:100%;
+            flex-wrap:wrap;
+            box-sizing:border-box;
+          ">
+
+          <span class="chart-type-label">
+            Visualização
+          </span>
+
+          <select class="chart-type-select" id="chartType_rType" aria-label="Selecionar visualização do gráfico">
+            
+                  <option value="bar" selected="">
+                    Barras
+                  </option>
+                
+                  <option value="line">
+                    Linhas
+                  </option>
+                
+                  <option value="radar">
+                    Radar
+                  </option>
+                
+                  <option value="doughnut">
+                    Rosca
+                  </option>
+                
+                  <option value="polarArea">
+                    Área polar
+                  </option>
+                
+                  <option value="pie">
+                    Pizza
+                  </option>
+                
+          </select>
+
+          <span class="chart-type-label chart-values-label">
+            Valores
+          </span>
+
+          <select class="chart-type-select chart-values-select" id="chartValues_rType" aria-label="Ativar ou desativar valores do gráfico">
+            <option value="on" selected="">
+              Ativados
+            </option>
+
+            <option value="off">
+              Desativados
+            </option>
+          </select>
+
+        </div>
+
+        <div class="chart-container" style="
+            position:relative;
+            width:100%;
+            height:280px;
+            min-height:280px;
+          ">
+          <canvas id="chart_rType" width="361" height="280" style="display: block; box-sizing: border-box; height: 280px; width: 361px;"></canvas>
+        </div>
+
+      </div>
+    
+
+        
+      <div class="chart-card" data-chart-key="spfGeral" style="min-height:370px;box-sizing:border-box;">
+
+        <h3>
+          <i class="fas fa-check-circle"></i>
+          COM SPF VS SEM SPF
+        </h3>
+
+        <div class="chart-toolbar" style="
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            width:100%;
+            flex-wrap:wrap;
+            box-sizing:border-box;
+          ">
+
+          <span class="chart-type-label">
+            Visualização
+          </span>
+
+          <select class="chart-type-select" id="chartType_spfGeral" aria-label="Selecionar visualização do gráfico">
+            
+                  <option value="doughnut" selected="">
+                    Rosca
+                  </option>
+                
+                  <option value="pie">
+                    Pizza
+                  </option>
+                
+                  <option value="bar">
+                    Barras
+                  </option>
+                
+                  <option value="polarArea">
+                    Área polar
+                  </option>
+                
+          </select>
+
+          <span class="chart-type-label chart-values-label">
+            Valores
+          </span>
+
+          <select class="chart-type-select chart-values-select" id="chartValues_spfGeral" aria-label="Ativar ou desativar valores do gráfico">
+            <option value="on" selected="">
+              Ativados
+            </option>
+
+            <option value="off">
+              Desativados
+            </option>
+          </select>
+
+        </div>
+
+        <div class="chart-container" style="
+            position:relative;
+            width:100%;
+            height:280px;
+            min-height:280px;
+          ">
+          <canvas id="chart_spfGeral" width="361" height="280" style="display: block; box-sizing: border-box; height: 280px; width: 361px;"></canvas>
+        </div>
+
+      </div>
+    
+
+        
+      <div class="chart-card" data-chart-key="spfVendedor" style="min-height:370px;box-sizing:border-box;">
+
+        <h3>
+          <i class="fas fa-user-check"></i>
+          SPF POR VENDEDOR
+        </h3>
+
+        <div class="chart-toolbar" style="
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            width:100%;
+            flex-wrap:wrap;
+            box-sizing:border-box;
+          ">
+
+          <span class="chart-type-label">
+            Visualização
+          </span>
+
+          <select class="chart-type-select" id="chartType_spfVendedor" aria-label="Selecionar visualização do gráfico">
+            
+                  <option value="bar" selected="">
+                    Barras
+                  </option>
+                
+                  <option value="line">
+                    Linhas
+                  </option>
+                
+                  <option value="radar">
+                    Radar
+                  </option>
+                
+                  <option value="pie">
+                    Pizza
+                  </option>
+                
+                  <option value="doughnut">
+                    Rosca
+                  </option>
+                
+                  <option value="polarArea">
+                    Área polar
+                  </option>
+                
+          </select>
+
+          <span class="chart-type-label chart-values-label">
+            Valores
+          </span>
+
+          <select class="chart-type-select chart-values-select" id="chartValues_spfVendedor" aria-label="Ativar ou desativar valores do gráfico">
+            <option value="on">
+              Ativados
+            </option>
+
+            <option value="off" selected="">
+              Desativados
+            </option>
+          </select>
+
+        </div>
+
+        <div class="chart-container" style="
+            position:relative;
+            width:100%;
+            height:280px;
+            min-height:280px;
+          ">
+          <canvas id="chart_spfVendedor" width="361" height="280" style="display: block; box-sizing: border-box; height: 280px; width: 361px;"></canvas>
+        </div>
+
+      </div>
+    
+
+      </div>
+
+      <div class="chart-note">
+        Use "Visualização" para alternar entre barras,
+        linhas, radar, rosca/pizza e área polar.
+      </div>
+    </div>

@@ -1,0 +1,119 @@
+.seller-filter {
+  display: block;
+  padding: 0;
+  margin: 0 0 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.seller-filter-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--transition-fast);
+}
+
+.seller-filter-header:hover { 
+  background: var(--bg-hover); 
+}
+
+.seller-filter-chevron {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  transition: transform var(--transition-medium);
+}
+
+.seller-filter.collapsed .seller-filter-chevron { 
+  transform: rotate(-90deg); 
+}
+
+.seller-filter-body {
+  padding: 0 14px var(--spacing-md);
+}
+
+.seller-filter.collapsed .seller-filter-body { 
+  display: none; 
+}
+
+.seller-filter-title {
+  color: var(--color-text-secondary);
+  font-size: 0.76rem;
+  font-weight: var(--font-weight-bold);
+}
+
+.seller-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.seller-selection-count {
+  margin-right: auto;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.seller-actions button {
+  border: 1px solid var(--border-dark);
+  background: var(--bg-white);
+  color: #55708d;
+  border-radius: var(--radius-sm);
+  padding: 5px 9px;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.seller-actions button:hover {
+  background: var(--bg-hover);
+  border-color: var(--color-primary-light);
+}
+
+.seller-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px;
+  border-radius: var(--radius-full);
+  border: 1px solid #d4dfeb;
+  background: var(--bg-white);
+  color: #294765;
+  font-size: 0.74rem;
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-fast);
+  margin: 3px;
+}
+
+.seller-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.seller-chip.active {
+  border-color: var(--color-primary-light);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.06);
+  background: #f0f7ff;
+}
+
+.seller-chip.inactive {
+  opacity: 0.42;
+  background: #f3f6f9;
+  text-decoration: line-through;
+}
+
+.seller-chip .seller-eye { 
+  color: var(--color-primary-light); 
+}
+
+.seller-chip.inactive .seller-eye { 
+  color: var(--color-text-light); 
+}

@@ -1,0 +1,48 @@
+.dashboard-footer {
+  margin-top: 18px;
+  min-height: 34px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  box-sizing: border-box;
+  border-top: 1px solid rgba(71, 85, 105, 0.38);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.72),
+      rgba(15, 23, 42, 0.92)
+    );
+  color: #7f9ab8;
+  font-size: 0.62rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.035em;
+  text-align: center;
+  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.dashboard-footer a {
+  color: #9ec5ff;
+  font-weight: 800;
+  text-decoration: none;
+  transition:
+    color 0.2s ease,
+    text-shadow 0.2s ease;
+}
+
+.dashboard-footer a:hover,
+.dashboard-footer a:focus-visible {
+  color: #dbeafe;
+  text-decoration: underline;
+  text-shadow: 0 0 12px rgba(59, 130, 246, 0.28);
+}
+
+@media (max-width: 500px) {
+  .dashboard-footer {
+    min-height: 32px;
+    padding: 7px 12px;
+    font-size: 0.57rem;
+  }
+}
