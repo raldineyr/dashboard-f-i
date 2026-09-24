@@ -1,3 +1,4 @@
+import Chart from 'chart.js/auto';
 import {
   escapeHtml,
   formatBRL,
@@ -26,6 +27,23 @@ export class ComparisonSection {
 
     this.selectedSellerB = '';
     this.selectedSellerMonthB = '';
+
+    this.comparisonChart = null;
+  }
+
+  destroyComparisonChart() {
+    if (!this.comparisonChart) return;
+
+    try {
+      this.comparisonChart.destroy();
+    } catch (error) {
+      console.warn(
+        'ComparisonSection: erro ao destruir gráfico de evolução:',
+        error
+      );
+    }
+
+    this.comparisonChart = null;
   }
 
   render(container) {
@@ -501,6 +519,8 @@ export class ComparisonSection {
   }
 
   renderComparison() {
+    this.destroyComparisonChart();
+
     const content =
       document.getElementById('comparisonContent');
 
@@ -609,9 +629,12 @@ export class ComparisonSection {
         selected.label,
         months
       )}
+
+      ${this.buildEvolutionChart(selected.label, months)}
     `;
 
     this.bindAutomaticControls();
+    this.renderEvolutionChart(months);
   }
 
   renderStoreVsStore(content) {
@@ -1167,6 +1190,171 @@ export class ComparisonSection {
    * A nomenclatura visual é independente
    * dos nomes internos utilizados nos dados.
    */
+
+  buildEvolutionChart(storeLabel, months) {
+    if (!Array.isArray(months) || months.length < 2) {
+      return '';
+    }
+
+    return `
+      <div class="comparison-evolution">
+        <div class="comparison-evolution-header">
+          <div>
+            <h4>
+              <i class="fas fa-chart-line"></i>
+              Evolução mensal
+            </h4>
+            <span>
+              ${escapeHtml(storeLabel)}
+            </span>
+          </div>
+        </div>
+
+        <div class="comparison-evolution-chart">
+          <canvas id="comparisonEvolutionChart"></canvas>
+        </div>
+      </div>
+    `;
+  }
+
+  renderEvolutionChart(months) {
+    const canvas =
+      document.getElementById('comparisonEvolutionChart');
+
+    if (!canvas || !Array.isArray(months) || months.length < 2) {
+      return;
+    }
+
+    const labels = months.map(month => {
+      const label = this.getPeriodLabel(month);
+      return label === 'Mês não identificado'
+        ? (month.monthLabel || 'Mês')
+        : label;
+    });
+
+    const getValues = getter =>
+      months.map(month => Number(getter(month)) || 0);
+
+    const datasets = [
+      {
+        label: 'Rentabilidade SPF',
+        data: getValues(month => month.kpis?.retorno),
+        borderColor: '#16A34A',
+        backgroundColor: 'rgba(22, 163, 74, 0.10)',
+        tension: 0.3,
+        fill: false,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2
+      },
+      {
+        label: 'Rentabilidade Retorno',
+        data: getValues(month => month.kpis?.retornoRentab),
+        borderColor: '#2563EB',
+        backgroundColor: 'rgba(37, 99, 235, 0.10)',
+        tension: 0.3,
+        fill: false,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2
+      },
+      {
+        label: 'Rentabilidade Total',
+        data: getValues(month => month.kpis?.rentab),
+        borderColor: '#F59E0B',
+        backgroundColor: 'rgba(245, 158, 11, 0.10)',
+        tension: 0.3,
+        fill: false,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 3
+      },
+      {
+        label: 'Contratos Assinados',
+        data: getValues(month => month.kpis?.operacoes),
+        borderColor: '#6B7280',
+        backgroundColor: 'rgba(107, 114, 128, 0.10)',
+        borderDash: [6, 4],
+        tension: 0.25,
+        fill: false,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        borderWidth: 2,
+        yAxisID: 'yContracts'
+      }
+    ];
+
+    this.comparisonChart = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: {
+              boxWidth: 12,
+              padding: 12,
+              font: { size: 10 }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: context => {
+                const value = Number(context.raw) || 0;
+
+                if (context.dataset.yAxisID === 'yContracts') {
+                  return `${context.dataset.label}: ${formatInteger(value)}`;
+                }
+
+                return `${context.dataset.label}: ${formatBRL(value)}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: value => formatBRL(value)
+            },
+            title: {
+              display: true,
+              text: 'Rentabilidade'
+            }
+          },
+          yContracts: {
+            beginAtZero: true,
+            position: 'right',
+            grid: {
+              drawOnChartArea: false
+            },
+            ticks: {
+              precision: 0
+            },
+            title: {
+              display: true,
+              text: 'Contratos'
+            }
+          },
+          x: {
+            ticks: {
+              autoSkip: false
+            }
+          }
+        }
+      }
+    });
+  }
 
   getStoreComparisonIndicators() {
     return [

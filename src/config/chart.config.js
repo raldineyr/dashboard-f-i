@@ -1,29 +1,59 @@
 export const CHART_TYPES = {
   VENDEDOR: [
     { value: 'bar', label: 'Barras' },
+    { value: 'horizontalBar', label: 'Barras horizontais' },
     { value: 'line', label: 'Linhas' },
+    { value: 'area', label: 'Área' },
     { value: 'radar', label: 'Radar' },
-    { value: 'polarArea', label: 'Área polar' },
-    { value: 'doughnut', label: 'Rosca' }
+    { value: 'pie', label: 'Pizza' },
+    { value: 'doughnut', label: 'Rosca' },
+    { value: 'polarArea', label: 'Área polar' }
   ],
   RETORNO_SPF: [
     { value: 'doughnut', label: 'Rosca' },
     { value: 'pie', label: 'Pizza' },
     { value: 'bar', label: 'Barras' },
-    { value: 'polarArea', label: 'Área polar' },
-    { value: 'line', label: 'Linhas' }
+    { value: 'horizontalBar', label: 'Barras horizontais' },
+    { value: 'line', label: 'Linhas' },
+    { value: 'area', label: 'Área' },
+    { value: 'polarArea', label: 'Área polar' }
   ],
   BANCO: [
     { value: 'bar', label: 'Barras' },
+    { value: 'horizontalBar', label: 'Barras horizontais' },
     { value: 'line', label: 'Linhas' },
+    { value: 'area', label: 'Área' },
     { value: 'radar', label: 'Radar' },
+    { value: 'pie', label: 'Pizza' },
     { value: 'doughnut', label: 'Rosca' },
     { value: 'polarArea', label: 'Área polar' }
   ],
   R_TYPE: [
     { value: 'bar', label: 'Barras' },
+    { value: 'horizontalBar', label: 'Barras horizontais' },
     { value: 'line', label: 'Linhas' },
+    { value: 'area', label: 'Área' },
     { value: 'radar', label: 'Radar' },
+    { value: 'pie', label: 'Pizza' },
+    { value: 'doughnut', label: 'Rosca' },
+    { value: 'polarArea', label: 'Área polar' }
+  ],
+  SPF_GERAL: [
+    { value: 'doughnut', label: 'Rosca' },
+    { value: 'pie', label: 'Pizza' },
+    { value: 'bar', label: 'Barras' },
+    { value: 'horizontalBar', label: 'Barras horizontais' },
+    { value: 'line', label: 'Linhas' },
+    { value: 'area', label: 'Área' },
+    { value: 'polarArea', label: 'Área polar' }
+  ],
+  SPF_VENDEDOR: [
+    { value: 'bar', label: 'Barras' },
+    { value: 'horizontalBar', label: 'Barras horizontais' },
+    { value: 'line', label: 'Linhas' },
+    { value: 'area', label: 'Área' },
+    { value: 'radar', label: 'Radar' },
+    { value: 'pie', label: 'Pizza' },
     { value: 'doughnut', label: 'Rosca' },
     { value: 'polarArea', label: 'Área polar' }
   ]

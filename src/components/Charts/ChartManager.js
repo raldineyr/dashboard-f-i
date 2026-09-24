@@ -5,9 +5,11 @@ import {
   CHART_TYPES,
   CHART_COLORS,
   BANK_CHART_COLORS,
-  R_CHART_COLORS,
-  MONTH_CHART_COLORS
+  R_CHART_COLORS
 } from '../../config/chart.config.js';
+
+import { storeConfig } from '../../config/store.config.js';
+import { monthConfig } from '../../config/month.config.js';
 
 Chart.register(ChartDataLabels);
 
@@ -77,7 +79,9 @@ export class ChartManager {
       case 'vendedor':
         types = CHART_TYPES?.VENDEDOR || [
           { value: 'bar', label: 'Barras' },
+          { value: 'horizontalBar', label: 'Barras horizontais' },
           { value: 'line', label: 'Linhas' },
+          { value: 'area', label: 'Área' },
           { value: 'radar', label: 'Radar' },
           { value: 'pie', label: 'Pizza' },
           { value: 'doughnut', label: 'Rosca' },
@@ -90,6 +94,8 @@ export class ChartManager {
           { value: 'doughnut', label: 'Rosca' },
           { value: 'pie', label: 'Pizza' },
           { value: 'bar', label: 'Barras' },
+          { value: 'horizontalBar', label: 'Barras horizontais' },
+          { value: 'area', label: 'Área' },
           { value: 'polarArea', label: 'Área polar' }
         ];
         break;
@@ -97,7 +103,9 @@ export class ChartManager {
       case 'banco':
         types = CHART_TYPES?.BANCO || [
           { value: 'bar', label: 'Barras' },
+          { value: 'horizontalBar', label: 'Barras horizontais' },
           { value: 'line', label: 'Linhas' },
+          { value: 'area', label: 'Área' },
           { value: 'radar', label: 'Radar' },
           { value: 'pie', label: 'Pizza' },
           { value: 'doughnut', label: 'Rosca' },
@@ -108,7 +116,9 @@ export class ChartManager {
       case 'rType':
         types = CHART_TYPES?.R_TYPE || [
           { value: 'bar', label: 'Barras' },
+          { value: 'horizontalBar', label: 'Barras horizontais' },
           { value: 'line', label: 'Linhas' },
+          { value: 'area', label: 'Área' },
           { value: 'radar', label: 'Radar' },
           { value: 'pie', label: 'Pizza' },
           { value: 'doughnut', label: 'Rosca' },
@@ -121,6 +131,8 @@ export class ChartManager {
           { value: 'doughnut', label: 'Rosca' },
           { value: 'pie', label: 'Pizza' },
           { value: 'bar', label: 'Barras' },
+          { value: 'horizontalBar', label: 'Barras horizontais' },
+          { value: 'area', label: 'Área' },
           { value: 'polarArea', label: 'Área polar' }
         ];
         break;
@@ -128,7 +140,9 @@ export class ChartManager {
       case 'spfVendedor':
         types = CHART_TYPES?.SPF_VENDEDOR || [
           { value: 'bar', label: 'Barras' },
+          { value: 'horizontalBar', label: 'Barras horizontais' },
           { value: 'line', label: 'Linhas' },
+          { value: 'area', label: 'Área' },
           { value: 'radar', label: 'Radar' },
           { value: 'pie', label: 'Pizza' },
           { value: 'doughnut', label: 'Rosca' },
@@ -471,7 +485,7 @@ export class ChartManager {
     chart.options.plugins.datalabels =
       this.getDataLabelOptions(
         key,
-        chart.config.type
+        this.chartTypes[key] || chart.config.type
       );
 
     chart.update('none');
@@ -489,7 +503,7 @@ export class ChartManager {
       this.chartTypes[key] || 'bar';
 
     return {
-      type,
+      type: this.getChartJsType(type),
 
       data: {
         labels: [],
@@ -505,6 +519,9 @@ export class ChartManager {
   }
 
   getChartOptions(key, type) {
+
+    const chartJsType =
+      this.getChartJsType(type);
 
     const isCircular =
       this.isCircularType(type);
@@ -523,6 +540,10 @@ export class ChartManager {
         intersect: false,
         mode: 'index'
       },
+
+      ...(type === 'horizontalBar'
+        ? { indexAxis: 'y' }
+        : {}),
 
       layout: {
         padding: {
@@ -557,9 +578,8 @@ export class ChartManager {
               size: 10
             },
 
-            // A legenda identifica loja + mês pela mesma cor do mês
-            // em todos os gráficos. As cores internas de bancos e R
-            // continuam sendo preservadas no próprio gráfico.
+            // A legenda identifica loja + mês pela mesma cor da loja.
+            // As cores internas de bancos e R continuam preservadas.
             generateLabels: chart => {
               const defaultLabels =
                 Chart.defaults.plugins.legend.labels.generateLabels(chart);
@@ -567,6 +587,21 @@ export class ChartManager {
               return defaultLabels.map(item => {
                 const dataset =
                   chart.data.datasets?.[item.datasetIndex];
+
+                if (
+                  dataset &&
+                  (
+                    dataset.label === undefined ||
+                    dataset.label === null ||
+                    String(dataset.label).trim() === ''
+                  )
+                ) {
+                  const fallback =
+                    dataset.contextLabel || 'Dados';
+
+                  dataset.label = fallback;
+                  item.text = fallback;
+                }
 
                 if (dataset?.legendColor) {
                   item.fillStyle = dataset.legendColor;
@@ -591,9 +626,22 @@ export class ChartManager {
       }
     };
 
+    if (type === 'area') {
+      options.elements = {
+        line: {
+          fill: true,
+          tension: 0.35
+        },
+        point: {
+          radius: 3,
+          hoverRadius: 5
+        }
+      };
+    }
+
     if (
       !isCircular &&
-      type !== 'radar'
+      chartJsType !== 'radar'
     ) {
 
       options.scales = {
@@ -616,7 +664,7 @@ export class ChartManager {
       };
     }
 
-    if (type === 'radar') {
+    if (this.getChartJsType(type) === 'radar') {
 
       options.scales = {
 
@@ -633,6 +681,12 @@ export class ChartManager {
     return options;
   }
 
+  getChartJsType(type) {
+    if (type === 'area') return 'line';
+    if (type === 'horizontalBar') return 'bar';
+    return type || 'bar';
+  }
+
   isCircularType(type) {
     return [
       'pie',
@@ -643,15 +697,17 @@ export class ChartManager {
 
   getChartTopPadding(type) {
 
-    if (type === 'bar') {
+    const chartJsType = this.getChartJsType(type);
+
+    if (chartJsType === 'bar') {
       return 24;
     }
 
-    if (type === 'line') {
+    if (chartJsType === 'line') {
       return 26;
     }
 
-    if (type === 'radar') {
+    if (this.getChartJsType(type) === 'radar') {
       return 18;
     }
 
@@ -1043,15 +1099,17 @@ export class ChartManager {
 
   getDataLabelAnchor(type) {
 
-    if (type === 'bar') {
+    const chartJsType = this.getChartJsType(type);
+
+    if (chartJsType === 'bar') {
       return 'end';
     }
 
-    if (type === 'line') {
+    if (chartJsType === 'line') {
       return 'center';
     }
 
-    if (type === 'radar') {
+    if (this.getChartJsType(type) === 'radar') {
       return 'end';
     }
 
@@ -1064,18 +1122,20 @@ export class ChartManager {
 
   getDataLabelAlign(type) {
 
-    if (type === 'bar') {
+    const chartJsType = this.getChartJsType(type);
+
+    if (chartJsType === 'bar') {
       return 'top';
     }
 
-    if (type === 'line') {
+    if (chartJsType === 'line') {
       return context =>
         context.dataIndex % 2 === 0
           ? 'top'
           : 'bottom';
     }
 
-    if (type === 'radar') {
+    if (this.getChartJsType(type) === 'radar') {
       return 'end';
     }
 
@@ -1088,15 +1148,17 @@ export class ChartManager {
 
   getDataLabelOffset(type) {
 
-    if (type === 'bar') {
+    const chartJsType = this.getChartJsType(type);
+
+    if (chartJsType === 'bar') {
       return 3;
     }
 
-    if (type === 'line') {
+    if (chartJsType === 'line') {
       return 7;
     }
 
-    if (type === 'radar') {
+    if (this.getChartJsType(type) === 'radar') {
       return 5;
     }
 
@@ -1163,7 +1225,7 @@ export class ChartManager {
 
     const config = {
 
-      type,
+      type: this.getChartJsType(type),
 
       data: {
         labels: [],
@@ -1418,7 +1480,7 @@ export class ChartManager {
         (d, index) => {
 
           const color =
-            this.getMonthChartColor(d) ||
+            this.getStoreChartColor(d) ||
             CHART_COLORS[
               index %
               CHART_COLORS.length
@@ -1458,6 +1520,91 @@ export class ChartManager {
       labels,
       datasets
     );
+  }
+
+  getCircularContextLabel(data) {
+    const active = (Array.isArray(data) ? data : [])
+      .filter(item => item && item.active !== false);
+
+    if (active.length === 0) {
+      return 'Dados';
+    }
+
+    const contexts = active.map(item => {
+      const month = String(
+        item.monthLabel ||
+        item.month ||
+        ''
+      ).trim();
+
+      // Para os gráficos de pizza/rosca, usamos somente a MARCA
+      // + MÊS no nome do contexto. A localidade continua disponível
+      // nos demais componentes e não é repetida aqui.
+      const storeName = String(
+        item.storeName ||
+        item.name ||
+        item.label ||
+        ''
+      ).trim();
+
+      const brand =
+        String(item.brand || '').trim().toUpperCase() ||
+        this.getBrandFromStoreName(storeName) ||
+        'Loja';
+
+      const brandLabel =
+        brand === 'MG IGT'
+          ? 'MG'
+          : brand;
+
+      return {
+        base: brandLabel || 'Loja',
+        month
+      };
+    });
+
+    const uniqueBases = [
+      ...new Set(
+        contexts
+          .map(item => item.base)
+          .filter(Boolean)
+      )
+    ];
+
+    if (uniqueBases.length === 1) {
+      const months = [
+        ...new Set(
+          contexts
+            .map(item => item.month)
+            .filter(Boolean)
+        )
+      ];
+
+      if (months.length === 1) {
+        return `${uniqueBases[0]} ${months[0]}`;
+      }
+
+      if (months.length > 1) {
+        return `${uniqueBases[0]} • ${months.join(', ')}`;
+      }
+
+      return uniqueBases[0];
+    }
+
+    const uniqueFullLabels = [
+      ...new Set(
+        contexts
+          .map(item => {
+            const full = item.base;
+            return item.month
+              ? `${full} ${item.month}`
+              : full;
+          })
+          .filter(Boolean)
+      )
+    ];
+
+    return uniqueFullLabels.join(' | ') || 'Dados';
   }
 
   updateRetornoSpfChart(data) {
@@ -1511,7 +1658,8 @@ export class ChartManager {
       [
         '#16A34A',
         '#2563EB'
-      ]
+      ],
+      this.getCircularContextLabel(data)
     );
   }
 
@@ -1583,7 +1731,8 @@ export class ChartManager {
         'banco',
         labels,
         totals,
-        bankColors
+        bankColors,
+        this.getCircularContextLabel(data)
       );
 
       return;
@@ -1594,13 +1743,13 @@ export class ChartManager {
         (d, index) => {
 
           const fallbackColor =
-            this.getMonthChartColor(d) ||
+            this.getStoreChartColor(d) ||
             CHART_COLORS[
               index % CHART_COLORS.length
             ];
 
-          const monthColor =
-            this.getMonthChartColor(d) ||
+          const storeColor =
+            this.getStoreChartColor(d) ||
             fallbackColor;
 
           return {
@@ -1655,7 +1804,7 @@ export class ChartManager {
 
             borderWidth: 1,
 
-            legendColor: monthColor
+            legendColor: storeColor
           };
         }
       );
@@ -1739,7 +1888,8 @@ export class ChartManager {
         'rType',
         rLabels,
         totals,
-        rColors
+        rColors,
+        this.getCircularContextLabel(data)
       );
 
       return;
@@ -1750,13 +1900,13 @@ export class ChartManager {
         (d, index) => {
 
           const fallbackColor =
-            this.getMonthChartColor(d) ||
+            this.getStoreChartColor(d) ||
             CHART_COLORS[
               index % CHART_COLORS.length
             ];
 
-          const monthColor =
-            this.getMonthChartColor(d) ||
+          const storeColor =
+            this.getStoreChartColor(d) ||
             fallbackColor;
 
           return {
@@ -1817,7 +1967,7 @@ export class ChartManager {
 
             borderWidth: 1,
 
-            legendColor: monthColor
+            legendColor: storeColor
           };
         }
       );
@@ -1899,7 +2049,8 @@ export class ChartManager {
       [
         this.spfColors.comSpf,
         this.spfColors.semSpf
-      ]
+      ],
+      this.getCircularContextLabel(data)
     );
   }
 
@@ -2034,7 +2185,8 @@ export class ChartManager {
 
         this.getDistinctColors(
           filtered.length
-        )
+        ),
+        this.getCircularContextLabel(data)
       );
 
       return;
@@ -2127,7 +2279,14 @@ export class ChartManager {
         {
 
           label:
-            source.label || '',
+            source.label ||
+            source.contextLabel ||
+            'Dados',
+
+          contextLabel:
+            source.contextLabel ||
+            source.label ||
+            'Dados',
 
           data:
             values,
@@ -2164,7 +2323,8 @@ export class ChartManager {
     key,
     labels,
     values,
-    colors
+    colors,
+    contextLabel = 'Dados'
   ) {
 
     const chart =
@@ -2176,7 +2336,17 @@ export class ChartManager {
 
     const safeLabels =
       Array.isArray(labels)
-        ? [...labels]
+        ? labels.map(
+            (label, index) => {
+              const text =
+                String(
+                  label ?? ''
+                ).trim();
+
+              return text ||
+                `Item ${index + 1}`;
+            }
+          )
         : [];
 
     const safeValues =
@@ -2201,6 +2371,12 @@ export class ChartManager {
     chart.data.datasets = [
 
       {
+
+        label:
+          contextLabel || 'Dados',
+
+        contextLabel:
+          contextLabel || 'Dados',
 
         data:
           safeValues,
@@ -2273,42 +2449,48 @@ export class ChartManager {
     );
   }
 
-  getMonthChartColor(data) {
+  getStoreChartColor(data) {
 
     if (!data) {
       return null;
     }
 
-    const month =
-      String(
-        data.month ||
-        data.monthLabel ||
-        ''
-      )
-        .trim()
-        .toUpperCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-
-    if (MONTH_CHART_COLORS[month]) {
-      return MONTH_CHART_COLORS[month];
+    // A cor exibida na legenda do gráfico deve ser a MESMA
+    // cor utilizada pelo componente "Lojas carregadas".
+    if (
+      typeof data.color === 'string' &&
+      data.color.trim()
+    ) {
+      return data.color.trim();
     }
 
-    const monthNumber =
-      Number(data.monthNumber) || 0;
+    try {
+      const storeName =
+        data.storeName ||
+        data.name ||
+        data.label ||
+        '';
 
-    const monthNames = [
-      'JANEIRO', 'FEVEREIRO', 'MARCO', 'ABRIL',
-      'MAIO', 'JUNHO', 'JULHO', 'AGOSTO',
-      'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'
-    ];
+      if (
+        storeConfig &&
+        typeof storeConfig.getStoreColor === 'function'
+      ) {
+        return storeConfig.getStoreColor(storeName);
+      }
+    } catch (error) {
+      console.warn(
+        'ChartManager: erro ao obter cor da loja:',
+        error
+      );
+    }
 
-    const monthName =
-      monthNames[monthNumber - 1];
+    return null;
+  }
 
-    return monthName
-      ? MONTH_CHART_COLORS[monthName] || null
-      : null;
+  // Mantido para compatibilidade com código legado.
+  // A cor da legenda NÃO deve mais depender do mês.
+  getMonthChartColor(data) {
+    return this.getStoreChartColor(data);
   }
 
   getChartStoreLabel(data) {
@@ -2333,12 +2515,45 @@ export class ChartManager {
     const locality =
       this.getChartStoreLocality(storeName, data.label);
 
-    const month =
+    let month =
       String(
         data.monthLabel ||
         data.month ||
         ''
       ).trim();
+
+    // Alguns datasets antigos podem chegar sem monthLabel.
+    // Nesse caso, recuperamos o mês pelo arquivo de origem.
+    if (!month) {
+      try {
+        const sourceText =
+          [
+            data.sourceFile,
+            data.fileName,
+            data.label,
+            data.storeName,
+            data.name
+          ]
+            .filter(Boolean)
+            .join(' ');
+
+        const detectedMonth =
+          monthConfig.detectMonth(sourceText);
+
+        month =
+          monthConfig.getMonthLabel(
+            detectedMonth
+          );
+
+        if (
+          month === 'Mês não identificado'
+        ) {
+          month = '';
+        }
+      } catch (error) {
+        month = '';
+      }
+    }
 
     const brandLabel =
       brand === 'MG IGT'
