@@ -1284,12 +1284,126 @@ export class ComparisonSection {
       }
     ];
 
+    const evolutionValueLabelsPlugin = {
+      id: 'evolutionValueLabels',
+      afterDatasetsDraw: chart => {
+        const ctx = chart.ctx;
+        const occupied = [];
+        const padding = 4;
+        const gap = 5;
+        const canvasWidth = chart.width;
+        const canvasHeight = chart.height;
+
+        const intersects = (a, b) => !(
+          a.right + gap < b.left ||
+          a.left - gap > b.right ||
+          a.bottom + gap < b.top ||
+          a.top - gap > b.bottom
+        );
+
+        const drawLabel = (point, text, color, preferredY) => {
+          ctx.save();
+          ctx.font = '600 10px Arial, sans-serif';
+          const metrics = ctx.measureText(text);
+          const width = metrics.width + padding * 2;
+          const height = 18;
+          const x = Math.max(
+            width / 2 + 4,
+            Math.min(canvasWidth - width / 2 - 4, point.x)
+          );
+
+          const candidates = [
+            preferredY,
+            preferredY - 22,
+            preferredY + 22,
+            preferredY - 42,
+            preferredY + 42,
+            preferredY - 62,
+            preferredY + 62
+          ];
+
+          let y = candidates.find(candidate => {
+            const top = candidate - height / 2;
+            const rect = {
+              left: x - width / 2,
+              right: x + width / 2,
+              top,
+              bottom: top + height
+            };
+
+            return (
+              rect.top >= 4 &&
+              rect.bottom <= canvasHeight - 4 &&
+              !occupied.some(item => intersects(rect, item))
+            );
+          });
+
+          if (y == null) {
+            y = Math.max(10, Math.min(canvasHeight - 10, preferredY));
+          }
+
+          const top = y - height / 2;
+          const rect = {
+            left: x - width / 2,
+            right: x + width / 2,
+            top,
+            bottom: top + height
+          };
+
+          occupied.push(rect);
+
+          ctx.beginPath();
+          ctx.roundRect(
+            rect.left,
+            rect.top,
+            width,
+            height,
+            4
+          );
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
+          ctx.fill();
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          ctx.fillStyle = color;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(text, x, y);
+          ctx.restore();
+        };
+
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+          const meta = chart.getDatasetMeta(datasetIndex);
+          if (meta.hidden) return;
+
+          meta.data.forEach((point, index) => {
+            const raw = Number(dataset.data?.[index]) || 0;
+            const text = dataset.yAxisID === 'yContracts'
+              ? formatInteger(raw)
+              : formatBRL(raw);
+
+            const offsets = [-18, -6, 12, 26];
+            const preferredY = point.y + (offsets[datasetIndex] || 0);
+
+            drawLabel(
+              point,
+              text,
+              dataset.borderColor || '#64748B',
+              preferredY
+            );
+          });
+        });
+      }
+    };
+
     this.comparisonChart = new Chart(canvas.getContext('2d'), {
       type: 'line',
       data: {
         labels,
         datasets
       },
+      plugins: [evolutionValueLabelsPlugin],
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -1325,6 +1439,7 @@ export class ComparisonSection {
           y: {
             beginAtZero: true,
             ticks: {
+              display: false,
               callback: value => formatBRL(value)
             },
             title: {
@@ -1339,6 +1454,7 @@ export class ComparisonSection {
               drawOnChartArea: false
             },
             ticks: {
+              display: false,
               precision: 0
             },
             title: {
